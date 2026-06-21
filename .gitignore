@@ -26,3 +26,5 @@ zipscope-*.pdf
 .idea/
 .DS_Store
 Thumbs.db
+
+.vercel
