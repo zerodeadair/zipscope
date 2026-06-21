@@ -28,7 +28,7 @@ import { printElementReport } from "./utils/printReport";
 import { isValidZip } from "./utils/zipValidation";
 
 export default function App() {
-  const [zip, setZip] = useState("27030");
+  const [zip, setZip] = useState("33558");
   const [profile, setProfile] = useState<DemographicProfile | null>(null);
   const [demographicError, setDemographicError] = useState<Extract<DemographicsResult, { ok: false }> | null>(null);
   const [events, setEvents] = useState<SportsEvent[]>([]);

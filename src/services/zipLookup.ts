@@ -20,6 +20,15 @@ const placeSeeds: Record<string, Omit<PlaceLookup, "source">> = {
     latitude: 35.9057,
     longitude: -78.7875,
   },
+  "33558": {
+    zip: "33558",
+    city: "Lutz",
+    state: "Florida",
+    stateCode: "FL",
+    county: "Hillsborough County",
+    latitude: 28.1474,
+    longitude: -82.5152,
+  },
   "90210": {
     zip: "90210",
     city: "Beverly Hills",
