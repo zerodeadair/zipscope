@@ -217,7 +217,7 @@ export function getRealEstateIntelligence(profile: DemographicProfile): RealEsta
     averageYearsHeld,
     taxHeatMap: buildTaxHeatMap(comparableProperties),
     aiObservation: buildAiObservation(profile, comparableProperties, effectiveTaxRate, recentAppreciationRate),
-    dataCoverageNote: "Current build uses ACS 2024 ZIP/ZCTA housing anchors plus modeled parcel-level comparables. County assessor, tax, deed, ATTOM, Zillow, Realtor.com, Redfin, FHFA, and parcel feeds can replace modeled records as live adapters are added.",
+    dataCoverageNote: "ZIP-level housing anchors come from ACS 2024 ZCTA data. Comparable rows, owner profiles, taxes, assessments, and transfer timelines are modeled scenarios for product exploration, not verified parcel records. County assessor, county tax, recorder/deed, ATTOM, Zillow, Realtor.com, Redfin, FHFA, and parcel feeds can replace these modeled records as live adapters are added.",
   };
 
   zipCache.set(profile.zip, intelligence);
@@ -255,7 +255,7 @@ function buildComparableProperties(
 
     return {
       id: `${profile.zip}-median-comp-${index + 1}`,
-      streetAddress: `${100 + Math.floor(rng() * 8900)} ${pick(streetNames, rng)} ${pick(streetSuffixes, rng)}`,
+      streetAddress: `${pick(streetNames, rng)} ${pick(streetSuffixes, rng)} modeled comp`,
       yearBuilt: Math.round(clamp(1952 + rng() * 68 + (appreciationRate - 0.34) * 16, 1908, 2025)),
       squareFeet,
       bedrooms,
@@ -287,7 +287,7 @@ function pickOwnerPattern(index: number, rng: () => number, ownerRate: number, p
     const owner = forcedInstitutional ? institutionalOwners[1] : pick(institutionalOwners, rng);
     return {
       ownerName: `${owner.brand} Residential Holdings ${String.fromCharCode(65 + Math.floor(rng() * 20))}, LLC`,
-      ownerMailingAddress: `${1000 + Math.floor(rng() * 8000)} Capital Center Dr, Suite ${100 + Math.floor(rng() * 800)}`,
+      ownerMailingAddress: "Modeled institutional mailing profile",
       entityType: owner.entityType,
       ownerOccupied: false,
       institutionalOwner: true,
@@ -300,8 +300,8 @@ function pickOwnerPattern(index: number, rng: () => number, ownerRate: number, p
   const entityRoll = rng();
   if (entityRoll < 0.12) {
     return {
-      ownerName: `${pick(lastNames, rng)} Family Trust`,
-      ownerMailingAddress: `${100 + Math.floor(rng() * 8900)} ${pick(streetNames, rng)} ${pick(streetSuffixes, rng)}`,
+      ownerName: "Family trust ownership profile",
+      ownerMailingAddress: "Modeled trust mailing profile",
       entityType: "Trust" as OwnershipEntityType,
       ownerOccupied: rng() < 0.72,
       institutionalOwner: false,
@@ -310,8 +310,8 @@ function pickOwnerPattern(index: number, rng: () => number, ownerRate: number, p
   }
   if (entityRoll < 0.28) {
     return {
-      ownerName: `${pick(streetNames, rng)} Property Group LLC`,
-      ownerMailingAddress: `${100 + Math.floor(rng() * 8900)} ${pick(streetNames, rng)} ${pick(streetSuffixes, rng)}`,
+      ownerName: "Local property group profile",
+      ownerMailingAddress: "Modeled LLC mailing profile",
       entityType: "LLC" as OwnershipEntityType,
       ownerOccupied: false,
       institutionalOwner: false,
@@ -320,8 +320,8 @@ function pickOwnerPattern(index: number, rng: () => number, ownerRate: number, p
   }
   if (entityRoll < 0.35) {
     return {
-      ownerName: `${pick(lastNames, rng)} Residential Corp.`,
-      ownerMailingAddress: `${100 + Math.floor(rng() * 8900)} ${pick(streetNames, rng)} ${pick(streetSuffixes, rng)}`,
+      ownerName: "Corporate owner profile",
+      ownerMailingAddress: "Modeled corporate mailing profile",
       entityType: "Corporation" as OwnershipEntityType,
       ownerOccupied: false,
       institutionalOwner: false,
@@ -329,11 +329,9 @@ function pickOwnerPattern(index: number, rng: () => number, ownerRate: number, p
     };
   }
 
-  const first = pick(firstNames, rng);
-  const last = pick(lastNames, rng);
   return {
-    ownerName: `${first} ${last}`,
-    ownerMailingAddress: rng() < ownerRate ? "Same as property address" : `${100 + Math.floor(rng() * 8900)} ${pick(streetNames, rng)} ${pick(streetSuffixes, rng)}`,
+    ownerName: "Individual owner profile",
+    ownerMailingAddress: rng() < ownerRate ? "Modeled owner-occupied profile" : "Modeled off-site mailing profile",
     entityType: "Individual" as OwnershipEntityType,
     ownerOccupied: rng() < ownerRate,
     institutionalOwner: false,
@@ -374,9 +372,9 @@ function buildTransactions(property: ComparableProperty, rng: () => number): Pro
 }
 
 function buildTransactionParty(rng: () => number) {
-  if (rng() < 0.22) return `${pick(streetNames, rng)} Holdings LLC`;
-  if (rng() < 0.12) return `${pick(lastNames, rng)} Family Trust`;
-  return `${pick(firstNames, rng)} ${pick(lastNames, rng)}`;
+  if (rng() < 0.22) return "Local holdings profile";
+  if (rng() < 0.12) return "Family trust profile";
+  return "Individual party profile";
 }
 
 function buildSurroundingZips(profile: DemographicProfile, rng: () => number): ZipHomeValuePeer[] {
@@ -576,5 +574,3 @@ const streetNames = [
 ];
 
 const streetSuffixes = ["Dr", "Ln", "Ct", "Ave", "Way", "Rd", "Terrace", "Place"];
-const firstNames = ["Avery", "Jordan", "Morgan", "Taylor", "Casey", "Riley", "Jamie", "Cameron", "Drew", "Quinn", "Reese", "Skyler"];
-const lastNames = ["Smith", "Johnson", "Williams", "Brown", "Miller", "Davis", "Garcia", "Wilson", "Anderson", "Thomas", "Moore", "Martin"];

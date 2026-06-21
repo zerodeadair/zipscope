@@ -358,6 +358,14 @@ body,
   font-size: 1.05rem;
 }
 
+.property-section-heading p {
+  max-width: 720px;
+  margin: 6px 0 0;
+  color: var(--muted);
+  font-size: 0.84rem;
+  line-height: 1.45;
+}
+
 .pagination-controls button {
   display: grid;
   place-items: center;

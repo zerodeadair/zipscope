@@ -145,11 +145,12 @@ export default function RealEstateIntelligencePanel({ profile }: { profile: Demo
         <OwnershipMetric label="Known private equity" value={intelligence.privateEquityOwnershipPercent} />
       </div>
 
-      <section className="comparable-property-section" aria-label="Comparable properties nearest the median home value">
+      <section className="comparable-property-section" aria-label="Modeled comparable properties nearest the median home value">
         <div className="property-section-heading">
           <div>
-            <span className="mono-label">Top 25 Median Comparables</span>
-            <h3>Properties nearest ZIP {profile.zip} median home value</h3>
+            <span className="mono-label">Top 25 Modeled Median Comparables</span>
+            <h3>Modeled property scenarios near ZIP {profile.zip} median home value</h3>
+            <p>These rows are ZIP-level comparable scenarios. They are not verified parcel, owner, tax, or deed records for a specific address.</p>
           </div>
           <div className="pagination-controls" aria-label="Comparable property pagination">
             <button type="button" onClick={() => setPage((current) => Math.max(0, current - 1))} disabled={page === 0} aria-label="Previous comparable property page">
@@ -165,7 +166,7 @@ export default function RealEstateIntelligencePanel({ profile }: { profile: Demo
           <table className="property-table">
             <thead>
               <tr>
-                <th>Property</th>
+                <th>Modeled Property</th>
                 <th>Value / Tax</th>
                 <th>Physical</th>
                 <th>Ownership</th>
@@ -192,7 +193,7 @@ export default function RealEstateIntelligencePanel({ profile }: { profile: Demo
       </section>
 
       <div className="real-estate-sources">
-        <strong>Real estate source stack</strong>
+        <strong>Future real estate source stack</strong>
         <span>County Assessor</span>
         <span>County Tax</span>
         <span>Recorder of Deeds</span>
@@ -250,14 +251,14 @@ function PropertyRows({
         <td>
           <button className="history-button" type="button" onClick={onToggleHistory}>
             {history?.loading ? <Loader2 size={15} className="spin-icon" /> : <Clock3 size={15} />}
-            {isExpanded ? "Hide timeline" : "Timeline"}
+            {isExpanded ? "Hide modeled timeline" : "Modeled timeline"}
           </button>
         </td>
       </tr>
       {isExpanded && (
         <tr className="transaction-row">
           <td colSpan={5}>
-            {history?.loading && <div className="transaction-loading">Fetching ownership history...</div>}
+            {history?.loading && <div className="transaction-loading">Building modeled transfer timeline...</div>}
             {history?.transactions && <TransactionTimeline transactions={history.transactions} />}
           </td>
         </tr>
@@ -268,16 +269,16 @@ function PropertyRows({
 
 function TransactionTimeline({ transactions }: { transactions: PropertyTransaction[] }) {
   return (
-    <div className="transaction-timeline" aria-label="Last five ownership transactions">
+    <div className="transaction-timeline" aria-label="Modeled ownership transfer timeline">
       {transactions.map((transaction) => (
         <article key={transaction.id}>
           <div>
-            <strong>{new Date(transaction.saleDate).getFullYear()} - Purchased for {formatCurrency(transaction.salePrice)}</strong>
-            <span>Buyer: {transaction.buyerName}</span>
-            <span>Seller: {transaction.sellerName}</span>
+            <strong>{new Date(transaction.saleDate).getFullYear()} - Modeled transfer for {formatCurrency(transaction.salePrice)}</strong>
+            <span>Buyer profile: {transaction.buyerName}</span>
+            <span>Seller profile: {transaction.sellerName}</span>
           </div>
           <div>
-            <em>{transaction.deedType}</em>
+            <em>Modeled {transaction.deedType}</em>
             <span>Transfer {formatCurrency(transaction.transferAmount)}</span>
             <span>{transaction.appreciationSincePreviousSale === null ? "Prior sale baseline" : `${formatPercent(transaction.appreciationSincePreviousSale)} appreciation`}</span>
             <span>{transaction.yearsHeld === null ? "Hold period unavailable" : `${transaction.yearsHeld} years held`}</span>
