@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import { Building2, ChevronLeft, ChevronRight, CircleDollarSign, Clock3, Home, Landmark, LineChart, Loader2, PieChart as PieChartIcon, ShieldAlert, UserRoundCheck } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
@@ -6,6 +6,7 @@ import { Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, Res
 import type { DemographicProfile } from "../types/demographics";
 import { formatCurrency, formatNumber, formatOptionalCurrency, formatOptionalPercent, formatPercent } from "../utils/formatters";
 import { ComparableProperty, PropertyTransaction, fetchPropertyTransactions, getRealEstateIntelligence } from "../services/realEstateIntelligence";
+import { PublicPropertyRecord, PublicPropertyRecordsResult, fetchPublicPropertyRecords } from "../services/publicPropertyRecords";
 
 const chartColors = ["#2f9fbd", "#63c7b2", "#8b7cf6", "#d9827c", "#d4a72c", "#5f8bd7", "#7ba66b", "#bf72a6"];
 const pageSize = 5;
@@ -15,13 +16,45 @@ type HistoryState = {
   transactions: PropertyTransaction[] | null;
 };
 
+type DisplayTransaction = PropertyTransaction & {
+  documentNumber?: string;
+  qualified?: string;
+  vacantOrImproved?: string;
+};
+
+type PublicRecordsState = {
+  loading: boolean;
+  result: PublicPropertyRecordsResult | null;
+  error: string;
+};
+
 export default function RealEstateIntelligencePanel({ profile }: { profile: DemographicProfile }) {
   const intelligence = useMemo(() => getRealEstateIntelligence(profile), [profile]);
   const [page, setPage] = useState(0);
   const [expandedPropertyId, setExpandedPropertyId] = useState<string | null>(null);
+  const [expandedPublicRecordId, setExpandedPublicRecordId] = useState<string | null>(null);
   const [histories, setHistories] = useState<Record<string, HistoryState>>({});
+  const [publicRecords, setPublicRecords] = useState<PublicRecordsState>({ loading: false, result: null, error: "" });
   const totalPages = Math.ceil(intelligence.comparableProperties.length / pageSize);
   const visibleProperties = intelligence.comparableProperties.slice(page * pageSize, page * pageSize + pageSize);
+
+  useEffect(() => {
+    let cancelled = false;
+    setExpandedPublicRecordId(null);
+    setPublicRecords({ loading: true, result: null, error: "" });
+
+    fetchPublicPropertyRecords(profile.zip, intelligence.medianHomeValue)
+      .then((result) => {
+        if (!cancelled) setPublicRecords({ loading: false, result, error: result.ok ? "" : result.error ?? "No public records returned." });
+      })
+      .catch((error) => {
+        if (!cancelled) setPublicRecords({ loading: false, result: null, error: error instanceof Error ? error.message : "Unable to fetch public records." });
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [intelligence.medianHomeValue, profile.zip]);
 
   async function togglePropertyHistory(property: ComparableProperty) {
     const nextExpanded = expandedPropertyId === property.id ? null : property.id;
@@ -145,6 +178,53 @@ export default function RealEstateIntelligencePanel({ profile }: { profile: Demo
         <OwnershipMetric label="Known private equity" value={intelligence.privateEquityOwnershipPercent} />
       </div>
 
+      <section className="comparable-property-section" aria-label="Verified public property records near the median home value">
+        <div className="property-section-heading">
+          <div>
+            <span className="mono-label">Verified Public Records</span>
+            <h3>Tax-record matches near ZIP {profile.zip} median home value</h3>
+            <p>
+              {publicRecords.result?.records.length
+                ? `${publicRecords.result.sourceName}; market-value band ${formatCurrency(publicRecords.result.valueBand?.low ?? 0)} to ${formatCurrency(publicRecords.result.valueBand?.high ?? 0)}.`
+                : "ZipScope is checking county public records for parcels in this ZIP near the ACS median home value."}
+            </p>
+          </div>
+          <div className="source-state-pill">
+            {publicRecords.loading ? "Searching public records" : publicRecords.result?.records.length ? `${publicRecords.result.records.length} verified records` : "Modeled fallback active"}
+          </div>
+        </div>
+
+        {publicRecords.loading && <div className="transaction-loading">Searching public tax and parcel records...</div>}
+        {!publicRecords.loading && publicRecords.error && <div className="transaction-loading">{publicRecords.error}</div>}
+        {!publicRecords.loading && publicRecords.result?.note && <p className="records-note">{publicRecords.result.note}</p>}
+
+        {publicRecords.result?.records.length ? (
+          <div className="property-table-wrap">
+            <table className="property-table">
+              <thead>
+                <tr>
+                  <th>Verified Property</th>
+                  <th>Value / Assessment</th>
+                  <th>Physical</th>
+                  <th>Ownership</th>
+                  <th>Records</th>
+                </tr>
+              </thead>
+              <tbody>
+                {publicRecords.result.records.map((record) => (
+                  <PublicPropertyRows
+                    key={record.id}
+                    record={record}
+                    isExpanded={expandedPublicRecordId === record.id}
+                    onToggleHistory={() => setExpandedPublicRecordId((current) => current === record.id ? null : record.id)}
+                  />
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : null}
+      </section>
+
       <section className="comparable-property-section" aria-label="Modeled comparable properties nearest the median home value">
         <div className="property-section-heading">
           <div>
@@ -210,6 +290,69 @@ export default function RealEstateIntelligencePanel({ profile }: { profile: Demo
   );
 }
 
+function PublicPropertyRows({
+  record,
+  isExpanded,
+  onToggleHistory,
+}: {
+  record: PublicPropertyRecord;
+  isExpanded: boolean;
+  onToggleHistory: () => void;
+}) {
+  return (
+    <>
+      <tr>
+        <td>
+          <strong>{record.streetAddress}</strong>
+          <span>Folio {record.folio}</span>
+          <span>PIN {record.pin}</span>
+        </td>
+        <td>
+          <strong>{formatCurrency(record.marketValue)}</strong>
+          <span>Assessed {formatCurrency(record.assessedValue)}</span>
+          <span>Taxable {formatCurrency(record.taxableValue)}</span>
+        </td>
+        <td>
+          <strong>{record.squareFeet ? `${formatNumber(record.squareFeet)} sf heated` : "Area unavailable"}</strong>
+          <span>{record.bedrooms || "-"} bd / {record.bathrooms || "-"} ba</span>
+          <span>{record.yearBuilt ? `Built ${record.yearBuilt}` : "Year built unavailable"}</span>
+        </td>
+        <td>
+          <strong>{record.ownerName}</strong>
+          <span>{record.ownerMailingAddress}</span>
+          <div className="owner-badge-row">
+            <em>{record.entityType}</em>
+            {record.institutionalOwner && <em className="institutional">Institutional</em>}
+            {record.privateEquityOwner && <em className="private-equity" title={record.institutionalTooltip}>PRIVATE EQUITY OWNER</em>}
+            {record.ownerOccupied && <em className="owner-occupied-badge">Homestead</em>}
+          </div>
+        </td>
+        <td>
+          <div className="record-link-stack">
+            <button className="history-button" type="button" onClick={onToggleHistory}>
+              <Clock3 size={15} />
+              {isExpanded ? "Hide sales history" : "Sales history"}
+            </button>
+            <a href={record.sourceUrl} target="_blank" rel="noreferrer">Parcel card</a>
+            {record.taxCollectorUrl && <a href={record.taxCollectorUrl} target="_blank" rel="noreferrer">Tax record</a>}
+          </div>
+        </td>
+      </tr>
+      {isExpanded && (
+        <tr className="transaction-row">
+          <td colSpan={5}>
+            {record.transactions.length ? (
+              <TransactionTimeline transactions={record.transactions} verified />
+            ) : (
+              <div className="transaction-loading">No sales history rows were returned on the public parcel card.</div>
+            )}
+          </td>
+        </tr>
+      )}
+    </>
+  );
+}
+
 function PropertyRows({
   property,
   history,
@@ -267,21 +410,24 @@ function PropertyRows({
   );
 }
 
-function TransactionTimeline({ transactions }: { transactions: PropertyTransaction[] }) {
+function TransactionTimeline({ transactions, verified = false }: { transactions: DisplayTransaction[]; verified?: boolean }) {
   return (
-    <div className="transaction-timeline" aria-label="Modeled ownership transfer timeline">
+    <div className="transaction-timeline" aria-label={verified ? "Verified public sales history" : "Modeled ownership transfer timeline"}>
       {transactions.map((transaction) => (
         <article key={transaction.id}>
           <div>
-            <strong>{new Date(transaction.saleDate).getFullYear()} - Modeled transfer for {formatCurrency(transaction.salePrice)}</strong>
-            <span>Buyer profile: {transaction.buyerName}</span>
-            <span>Seller profile: {transaction.sellerName}</span>
+            <strong>{new Date(transaction.saleDate).getFullYear()} - {verified ? "Recorded sale" : "Modeled transfer"} for {formatCurrency(transaction.salePrice)}</strong>
+            <span>{verified ? "Buyer source" : "Buyer profile"}: {transaction.buyerName}</span>
+            <span>{verified ? "Seller source" : "Seller profile"}: {transaction.sellerName}</span>
           </div>
           <div>
-            <em>Modeled {transaction.deedType}</em>
+            <em>{verified ? transaction.deedType : `Modeled ${transaction.deedType}`}</em>
             <span>Transfer {formatCurrency(transaction.transferAmount)}</span>
             <span>{transaction.appreciationSincePreviousSale === null ? "Prior sale baseline" : `${formatPercent(transaction.appreciationSincePreviousSale)} appreciation`}</span>
             <span>{transaction.yearsHeld === null ? "Hold period unavailable" : `${transaction.yearsHeld} years held`}</span>
+            {"documentNumber" in transaction && transaction.documentNumber && <span>Instrument {transaction.documentNumber}</span>}
+            {"qualified" in transaction && transaction.qualified && <span>{transaction.qualified}</span>}
+            {"vacantOrImproved" in transaction && transaction.vacantOrImproved && <span>{transaction.vacantOrImproved}</span>}
           </div>
         </article>
       ))}
