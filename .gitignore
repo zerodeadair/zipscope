@@ -1,0 +1,8 @@
+node_modules/
+backups/
+*.log
+.DS_Store
+.env
+.env.*
+!.env.example
+scratchscope-github-upload.zip

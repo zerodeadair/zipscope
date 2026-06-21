@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#dcecf4" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="ScratchScope" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <script>
+      (() => {
+        const saved = localStorage.getItem("scratchscope-theme");
+        const theme = saved === "night" || saved === "daytime"
+          ? saved
+          : "daytime";
+        document.documentElement.dataset.theme = theme;
+        document.querySelector('meta[name="theme-color"]').content = theme === "night" ? "#071a23" : "#dcecf4";
+      })();
+    </script>
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.svg" />
+    <link rel="stylesheet" href="./src/styles.css?v=20260613-floating-help" />
+    <title>ScratchScope Lottery Intelligence</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="./src/app.js?v=20260613-floating-help"></script>
+  </body>
+</html>

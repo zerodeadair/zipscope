@@ -1,0 +1,17 @@
+{
+  "name": "ScratchScope Lottery Intelligence",
+  "short_name": "ScratchScope",
+  "description": "Personal NC lottery tracking and public-data intelligence dashboard.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#edf5f7",
+  "theme_color": "#dcecf4",
+  "icons": [
+    {
+      "src": "/icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
