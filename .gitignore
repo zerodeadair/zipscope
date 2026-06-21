@@ -1,0 +1,28 @@
+# Dependencies
+node_modules/
+
+# Production build output
+dist/
+
+# Local environment files
+.env
+.env.*
+!.env.example
+!.env.local.example
+
+# Logs and generated TypeScript build state
+*.log
+*.tsbuildinfo
+vite.config.js
+vite.config.d.ts
+
+# Local restore points and visual verification artifacts
+restore-points/
+zipscope-*.png
+zipscope-*.pdf
+
+# Editor and OS files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
