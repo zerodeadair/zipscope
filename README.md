@@ -12,6 +12,12 @@ npm install
 npm run dev
 ```
 
+## Property Database Backend
+
+Phase 1 of the NC/FL statewide property database lives in `backend/`. It adds a FastAPI skeleton, SQLAlchemy schema, Alembic migration, Docker Compose PostGIS/Redis services, and seed examples for ZIP `33558` in Florida and ZIP `27030` in North Carolina.
+
+See `backend/README.md` for setup and API details.
+
 ## Upload To GitHub
 
 After Git is installed and available in your terminal:
