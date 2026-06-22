@@ -450,6 +450,23 @@ body,
   margin-bottom: 4px;
 }
 
+.verified-property-link {
+  display: block;
+  margin-bottom: 4px;
+  color: #24364a;
+  font-size: 0.8rem;
+  font-weight: 850;
+  line-height: 1.25;
+  text-decoration: none;
+}
+
+.verified-property-link:hover,
+.verified-property-link:focus-visible {
+  color: #075985;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
 .property-table td span {
   font-size: 0.76rem;
   line-height: 1.34;

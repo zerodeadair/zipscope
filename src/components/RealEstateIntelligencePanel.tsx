@@ -303,7 +303,9 @@ function PublicPropertyRows({
     <>
       <tr>
         <td>
-          <strong>{record.streetAddress}</strong>
+          <a className="verified-property-link" href={record.sourceUrl} target="_blank" rel="noreferrer">
+            {record.streetAddress}
+          </a>
           <span>Folio {record.folio}</span>
           <span>PIN {record.pin}</span>
         </td>
@@ -370,7 +372,7 @@ function TaxRecordContinuation({ record }: { record: PublicPropertyRecord }) {
         </div>
         <div className="verified-tax-actions">
           <a href={record.sourceUrl} target="_blank" rel="noreferrer">Parcel card</a>
-          {record.taxCollectorUrl && <a href={record.taxCollectorUrl} target="_blank" rel="noreferrer">Tax collector</a>}
+          {record.taxCollectorUrl && <a href={record.taxCollectorUrl} target="_blank" rel="noreferrer">Tax record</a>}
         </div>
       </div>
       <div className="tax-continuation-grid">
