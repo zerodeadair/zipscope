@@ -194,7 +194,7 @@ export default function App() {
       <main>
         <header className="topbar">
           <strong>ZipScope</strong>
-          <span>Demographics. Market Signals. Sports Odds. One ZIP at a time.</span>
+          <span>Housing. Demographics. Regional intelligence. One ZIP at a time.</span>
           <button className="theme-toggle" type="button" onClick={toggleTheme} aria-label="Toggle daytime and night mode">
             {isDark ? <Sun size={17} /> : <Moon size={17} />}
             {isDark ? "Day mode" : "Night mode"}

@@ -1,5 +1,5 @@
-import { forwardRef, useMemo, useRef, useState } from "react";
-import { Baby, Banknote, BriefcaseBusiness, Building2, Car, Clock3, CloudSun, Gauge, GraduationCap, HeartPulse, Home, Info, Languages, Laptop, MapPinned, Navigation, Pin, Radar, Rocket, Scale, School, Search, ShieldAlert, Smartphone, Sparkles, Store, Timer, Train, Trophy, Umbrella, UserRound, Users, UsersRound, Vote, Wifi } from "lucide-react";
+import { forwardRef, useEffect, useMemo, useRef, useState } from "react";
+import { Baby, Banknote, BriefcaseBusiness, Building2, Car, ChevronDown, ChevronUp, Clock3, CloudSun, Gauge, GraduationCap, HeartPulse, Home, Info, Languages, Laptop, MapPinned, Navigation, Pin, Radar, Rocket, Scale, School, Search, ShieldAlert, Smartphone, Sparkles, Store, Timer, Train, Trophy, Umbrella, UserRound, Users, UsersRound, Vote, Wifi } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { DemographicProfile } from "../providers/demographicsProvider";
 import { formatNumber, formatOptionalCurrency, formatOptionalNumber, formatOptionalPercent } from "../utils/formatters";
@@ -21,7 +21,12 @@ export type DemographicTile = {
   percentile?: number;
 };
 
-const priorityGroups = ["All", "Pinned", "Overview", "Population", "Income", "Housing", "Jobs", "Education", "Lifestyle", "Transportation", "Civic", "Risk", "Opportunity", "Sports", "Growth", "Beta"];
+const priorityGroups = ["All", "Pinned", "Overview", "Population", "Income", "Housing", "Cost of Living", "Jobs", "Education", "Lifestyle", "Transportation", "Technology", "Civic", "Risk", "Opportunity", "Sports", "Growth", "Beta"];
+const topDefaultTileLimit = 20;
+const additionalOpenStorageKey = "zipscope-additional-analytics-open";
+const additionalGroupStorageKey = "zipscope-additional-analytics-group";
+const additionalQueryStorageKey = "zipscope-additional-analytics-query";
+const additionalCompactStorageKey = "zipscope-additional-analytics-compact";
 
 type Props = {
   onPinChange?: (pinnedIds: string[]) => void;
@@ -32,24 +37,50 @@ type Props = {
 export const recommendedTileIds = ["home-value", "owner-occupied", "population", "median-income", "home-income", "growth-opportunity", "investment-score", "cost-of-living", "commute"];
 
 export default function DemographicsDashboard({ onPinChange, pinnedTileIds: controlledPinnedTileIds, profile }: Props) {
-  const topRaceGroup = getTopRaceGroup(profile.raceEthnicity);
   const tiles = useMemo(() => buildDemographicTiles(profile), [profile]);
-  const [activeGroup, setActiveGroup] = useState("All");
-  const [tileQuery, setTileQuery] = useState("");
-  const [compactView, setCompactView] = useState(false);
-  const [showAllTiles, setShowAllTiles] = useState(true);
+  const [activeGroup, setActiveGroup] = useState(() => localStorage.getItem(additionalGroupStorageKey) ?? "All");
+  const [tileQuery, setTileQuery] = useState(() => localStorage.getItem(additionalQueryStorageKey) ?? "");
+  const [compactView, setCompactView] = useState(() => localStorage.getItem(additionalCompactStorageKey) === "true");
+  const [additionalOpen, setAdditionalOpen] = useState(() => localStorage.getItem(additionalOpenStorageKey) === "true");
   const [localPinnedTileIds, setLocalPinnedTileIds] = useState<string[]>(["home-value", "owner-occupied", "population", "median-income", "home-income"]);
   const pinnedTileIds = controlledPinnedTileIds ?? localPinnedTileIds;
-  const [selectedTileId, setSelectedTileId] = useState(tiles[0]?.id ?? "");
+  const rankedTiles = useMemo(() => rankDemographicTiles(tiles, pinnedTileIds), [pinnedTileIds, tiles]);
+  const topTiles = rankedTiles.slice(0, topDefaultTileLimit);
+  const additionalTiles = rankedTiles.slice(topDefaultTileLimit);
+  const intelligenceQuestions = useMemo(() => buildTopIntelligenceQuestions(profile, rankedTiles), [profile, rankedTiles]);
+  const regionalScope = useMemo(() => buildRegionalScope(profile), [profile]);
+  const [selectedTileId, setSelectedTileId] = useState(rankedTiles[0]?.id ?? "");
   const insightRef = useRef<HTMLElement | null>(null);
-  const selectedTile = tiles.find((tile) => tile.id === selectedTileId) ?? tiles[0];
-  const filteredTiles = tiles.filter((tile) => {
+  const selectedTile = rankedTiles.find((tile) => tile.id === selectedTileId) ?? rankedTiles[0];
+  const filteredAdditionalTiles = additionalTiles.filter((tile) => {
     const group = tile.category ?? "Core";
     const matchesGroup = activeGroup === "All" || (activeGroup === "Pinned" ? pinnedTileIds.includes(tile.id) : group === activeGroup);
     const matchesQuery = `${tile.label} ${tile.detail} ${tile.insight}`.toLowerCase().includes(tileQuery.trim().toLowerCase());
     return matchesGroup && matchesQuery;
   });
-  const visibleTiles = showAllTiles || activeGroup !== "All" || tileQuery ? filteredTiles : filteredTiles.slice(0, 28);
+  const categoryCounts = useMemo(() => {
+    return additionalTiles.reduce<Record<string, number>>((counts, tile) => {
+      const category = tile.category ?? "Beta";
+      counts[category] = (counts[category] ?? 0) + 1;
+      return counts;
+    }, {});
+  }, [additionalTiles]);
+
+  useEffect(() => {
+    localStorage.setItem(additionalOpenStorageKey, String(additionalOpen));
+  }, [additionalOpen]);
+
+  useEffect(() => {
+    localStorage.setItem(additionalGroupStorageKey, activeGroup);
+  }, [activeGroup]);
+
+  useEffect(() => {
+    localStorage.setItem(additionalQueryStorageKey, tileQuery);
+  }, [tileQuery]);
+
+  useEffect(() => {
+    localStorage.setItem(additionalCompactStorageKey, String(compactView));
+  }, [compactView]);
 
   function handleTileClick(tileId: string) {
     setSelectedTileId(tileId);
@@ -107,35 +138,18 @@ export default function DemographicsDashboard({ onPinChange, pinnedTileIds: cont
           <small>{new Date(profile.lastUpdated).toLocaleDateString()}</small>
         </div>
       </div>
+      <IntelligenceQuestionStrip questions={intelligenceQuestions} />
+      <RegionalScopePanel profile={profile} scope={regionalScope} />
       {selectedTile && <TileInsightPanel ref={insightRef} tile={selectedTile} profile={profile} />}
-      <div className="tile-command-center" aria-label="Demographic tile controls">
-        <div className="tile-search-box">
-          <Search size={16} />
-          <input value={tileQuery} onChange={(event) => setTileQuery(event.target.value)} placeholder="Filter intelligence tiles" aria-label="Filter demographic tiles" />
+      <div className="priority-dashboard-heading">
+        <div>
+          <span className="mono-label">Top Default Dashboard</span>
+          <h3>20 highest-value ZIP intelligence cards</h3>
         </div>
-        <div className="tile-group-chips" aria-label="Tile groups">
-          {priorityGroups.map((group) => (
-            <button className={activeGroup === group ? "active" : ""} key={group} type="button" onClick={() => setActiveGroup(group)}>
-              {group === "Pinned" && <Pin size={14} />}
-              {group}
-            </button>
-          ))}
-        </div>
-        <div className="tile-view-actions">
-          <button className={compactView ? "active" : ""} type="button" onClick={() => setCompactView((current) => !current)}>
-            {compactView ? "Detailed" : "Compact"}
-          </button>
-          <button type="button" onClick={pinRecommendedTiles}>Pin recommended</button>
-          <button type="button" onClick={pinTopInsights}>Pin top</button>
-          <button type="button" disabled={!pinnedTileIds.length} onClick={() => updatePinnedTiles([])}>Clear pins</button>
-          <button type="button" onClick={() => setActiveGroup("Pinned")}>Pinned report</button>
-          <button type="button" onClick={() => setShowAllTiles((current) => !current)}>
-            {showAllTiles ? "Priority View" : `Show All ${tiles.length}`}
-          </button>
-        </div>
+        <p>Ranked by housing relevance, everyday readability, investment usefulness, comparison value, source confidence, and visual signal strength.</p>
       </div>
       <div className={`stat-grid expanded-demographic-grid${compactView ? " compact" : ""}`}>
-        {visibleTiles.map((tile) => (
+        {topTiles.map((tile) => (
           <StatCard
             key={tile.id}
             icon={tile.icon}
@@ -154,7 +168,64 @@ export default function DemographicsDashboard({ onPinChange, pinnedTileIds: cont
           />
         ))}
       </div>
-      {!visibleTiles.length && <div className="tile-empty-state">No matching tiles yet. Try another category or clear the filter.</div>}
+      <section className={`additional-analytics-shell${additionalOpen ? " open" : ""}`} aria-label="Additional ZIP Analytics">
+        <button className="additional-analytics-summary" type="button" onClick={() => setAdditionalOpen((current) => !current)} aria-expanded={additionalOpen}>
+          <span>
+            <b>Additional ZIP Analytics</b>
+            <em>{additionalTiles.length} lower-priority metrics preserved with search, category filters, and pinning.</em>
+          </span>
+          <strong>{additionalOpen ? "Hide" : "Open"} {additionalOpen ? <ChevronUp size={17} /> : <ChevronDown size={17} />}</strong>
+        </button>
+        {additionalOpen && (
+          <div className="additional-analytics-body">
+            <div className="tile-command-center" aria-label="Additional ZIP analytics controls">
+              <div className="tile-search-box">
+                <Search size={16} />
+                <input value={tileQuery} onChange={(event) => setTileQuery(event.target.value)} placeholder="Search additional ZIP analytics" aria-label="Search additional ZIP analytics" />
+              </div>
+              <div className="tile-group-chips" aria-label="Additional analytics categories">
+                {priorityGroups.filter((group) => group === "All" || group === "Pinned" || categoryCounts[group]).map((group) => (
+                  <button className={activeGroup === group ? "active" : ""} key={group} type="button" onClick={() => setActiveGroup(group)}>
+                    {group === "Pinned" && <Pin size={14} />}
+                    {group}
+                    {group !== "All" && group !== "Pinned" && <span>{categoryCounts[group]}</span>}
+                  </button>
+                ))}
+              </div>
+              <div className="tile-view-actions">
+                <button className={compactView ? "active" : ""} type="button" onClick={() => setCompactView((current) => !current)}>
+                  {compactView ? "Detailed" : "Compact"}
+                </button>
+                <button type="button" onClick={pinRecommendedTiles}>Pin recommended</button>
+                <button type="button" onClick={pinTopInsights}>Pin top</button>
+                <button type="button" disabled={!pinnedTileIds.length} onClick={() => updatePinnedTiles([])}>Clear pins</button>
+                <button type="button" onClick={() => setActiveGroup("Pinned")}>Pinned report</button>
+              </div>
+            </div>
+            <div className={`stat-grid expanded-demographic-grid additional-grid${compactView ? " compact" : ""}`}>
+              {filteredAdditionalTiles.map((tile) => (
+                <StatCard
+                  key={tile.id}
+                  icon={tile.icon}
+                  label={tile.label}
+                  value={tile.value}
+                  detail={tile.detail}
+                  category={tile.category}
+                  confidence={tile.confidence}
+                  status={tile.status}
+                  trend={tile.trend}
+                  percentile={tile.percentile}
+                  pinned={pinnedTileIds.includes(tile.id)}
+                  onPin={() => togglePinned(tile.id)}
+                  active={selectedTile?.id === tile.id}
+                  onClick={() => handleTileClick(tile.id)}
+                />
+              ))}
+            </div>
+            {!filteredAdditionalTiles.length && <div className="tile-empty-state">No matching additional analytics yet. Try another category or clear the search.</div>}
+          </div>
+        )}
+      </section>
       <RaceCompositionPanel raceEthnicity={profile.raceEthnicity} />
       <DemographicCharts profile={profile} />
     </section>
@@ -180,6 +251,88 @@ const TileInsightPanel = forwardRef<HTMLElement, { tile: DemographicTile; profil
     </section>
   );
 });
+
+type IntelligenceQuestion = {
+  id: string;
+  icon: LucideIcon;
+  question: string;
+  answer: string;
+  detail: string;
+  score: number;
+};
+
+type RegionalScopeRow = {
+  level: string;
+  label: string;
+  population: number;
+  homeValue: number | null;
+  income: number | null;
+  costOfLiving: number;
+  growth: number;
+  shareLabel: string;
+};
+
+function IntelligenceQuestionStrip({ questions }: { questions: IntelligenceQuestion[] }) {
+  return (
+    <section className="zip-intelligence-strip" aria-label="Top ZIP intelligence answers">
+      {questions.map((question) => {
+        const Icon = question.icon;
+        return (
+          <article key={question.id} className="zip-question-card">
+            <div className="zip-question-top">
+              <Icon size={18} />
+              <span>{question.question}</span>
+            </div>
+            <strong>{question.answer}</strong>
+            <p>{question.detail}</p>
+            <div className="zip-question-meter" aria-label={`${question.answer} score ${question.score}`}>
+              <i style={{ width: `${question.score}%` }} />
+            </div>
+          </article>
+        );
+      })}
+    </section>
+  );
+}
+
+function RegionalScopePanel({ profile, scope }: { profile: DemographicProfile; scope: RegionalScopeRow[] }) {
+  return (
+    <section className="regional-scope-panel" aria-label="Regional scope comparison">
+      <div className="regional-scope-header">
+        <div>
+          <span className="mono-label">Regional Scope</span>
+          <h3>ZIP to city to county to state</h3>
+        </div>
+        <p>{scope[0]?.shareLabel} Scope rows beyond ZIP are modeled comparison benchmarks until direct city, county, and state feeds are connected.</p>
+      </div>
+      <div className="regional-ladder" aria-label="Geographic hierarchy">
+        {scope.map((row, index) => (
+          <div className="regional-ladder-step" key={row.level}>
+            <span>{row.level}</span>
+            <strong>{row.label}</strong>
+            {index < scope.length - 1 && <i />}
+          </div>
+        ))}
+      </div>
+      <div className="regional-comparison-grid">
+        {scope.map((row) => (
+          <article className="regional-comparison-card" key={row.level}>
+            <span>{row.level}</span>
+            <strong>{row.label}</strong>
+            <dl>
+              <div><dt>Population</dt><dd>{formatNumber(row.population)}</dd></div>
+              <div><dt>Home Value</dt><dd>{formatOptionalCurrency(row.homeValue)}</dd></div>
+              <div><dt>Income</dt><dd>{formatOptionalCurrency(row.income)}</dd></div>
+              <div><dt>Cost</dt><dd>{row.costOfLiving}/100</dd></div>
+              <div><dt>Growth</dt><dd>{row.growth}/100</dd></div>
+            </dl>
+            <p>{row.shareLabel}</p>
+          </article>
+        ))}
+      </div>
+    </section>
+  );
+}
 
 export function buildDemographicTiles(profile: DemographicProfile): DemographicTile[] {
   const topRaceGroup = getTopRaceGroup(profile.raceEthnicity);
@@ -927,6 +1080,192 @@ function formatGeographicSummary(profile: DemographicProfile) {
     : profile.name;
 
   return `ZIP ${profile.zip} maps to Census ZCTA ${profile.zcta}; place label resolves to ${place}.`;
+}
+
+function rankDemographicTiles(tiles: DemographicTile[], pinnedTileIds: string[]) {
+  const priorityIds = [
+    "home-value",
+    "median-rent",
+    "housing-affordability",
+    "home-income",
+    "owner-occupied",
+    "renter-occupied",
+    "vacancy",
+    "housing-units",
+    "investment-score",
+    "growth-opportunity",
+    "neighborhood-momentum",
+    "population",
+    "median-income",
+    "cost-of-living",
+    "resilience-score",
+    "median-age",
+    "household-size",
+    "family-households",
+    "population-growth",
+    "commute",
+    "bachelors",
+    "employment-rate",
+    "walkability",
+    "population-density",
+    "business-opportunity",
+    "family-friendly",
+    "young-professional",
+    "retirement-comfort",
+  ];
+  const categoryWeight: Record<string, number> = {
+    Housing: 210,
+    Population: 170,
+    Income: 160,
+    "Cost of Living": 155,
+    Opportunity: 150,
+    Growth: 145,
+    Jobs: 122,
+    Education: 112,
+    Lifestyle: 102,
+    Transportation: 92,
+    Risk: 86,
+    Technology: 76,
+    Civic: 66,
+    Sports: 42,
+    Beta: 34,
+  };
+
+  return [...tiles].sort((a, b) => {
+    const aIndex = priorityIds.indexOf(a.id);
+    const bIndex = priorityIds.indexOf(b.id);
+    const aScore =
+      (aIndex >= 0 ? 900 - aIndex * 16 : 0) +
+      (categoryWeight[a.category ?? "Beta"] ?? 40) +
+      (a.status === "Real data" ? 40 : a.status === "Estimated" ? 18 : 6) +
+      (a.confidence === "High confidence" ? 18 : 0) +
+      (a.trend === "Opportunity" ? 18 : a.trend === "Balanced" ? 9 : 0) +
+      (a.percentile ?? 50) * 0.22 +
+      (pinnedTileIds.includes(a.id) ? 12 : 0);
+    const bScore =
+      (bIndex >= 0 ? 900 - bIndex * 16 : 0) +
+      (categoryWeight[b.category ?? "Beta"] ?? 40) +
+      (b.status === "Real data" ? 40 : b.status === "Estimated" ? 18 : 6) +
+      (b.confidence === "High confidence" ? 18 : 0) +
+      (b.trend === "Opportunity" ? 18 : b.trend === "Balanced" ? 9 : 0) +
+      (b.percentile ?? 50) * 0.22 +
+      (pinnedTileIds.includes(b.id) ? 12 : 0);
+    return bScore - aScore;
+  });
+}
+
+function buildTopIntelligenceQuestions(profile: DemographicProfile, tiles: DemographicTile[]): IntelligenceQuestion[] {
+  const byId = (id: string) => tiles.find((tile) => tile.id === id);
+  const affordability = byId("housing-affordability");
+  const population = byId("population");
+  const growth = byId("growth-opportunity");
+  const comparison = byId("similar-match") ?? byId("resilience-score");
+  const investment = byId("investment-score");
+  const homeValue = profile.medianHomeValue ?? 0;
+  const income = profile.medianHouseholdIncome ?? 0;
+  const valueIncomeRatio = homeValue && income ? homeValue / income : null;
+  const expenseScore = valueIncomeRatio ? clamp(Math.round(100 - valueIncomeRatio * 13), 5, 96) : affordability?.percentile ?? 58;
+
+  return [
+    {
+      id: "expensive",
+      icon: Home,
+      question: "How expensive?",
+      answer: valueIncomeRatio ? `${valueIncomeRatio.toFixed(1)}x income` : affordability?.value ?? "Modeled",
+      detail: `${formatOptionalCurrency(profile.medianHomeValue)} median value with ${affordability?.label.toLowerCase() ?? "housing affordability"} context.`,
+      score: expenseScore,
+    },
+    {
+      id: "who",
+      icon: Users,
+      question: "Who lives here?",
+      answer: `${formatNumber(profile.population)} residents`,
+      detail: `${profile.medianAge === null ? "Median age unavailable" : `${profile.medianAge.toFixed(1)} median age`}; ${population?.detail.toLowerCase() ?? "ACS population estimate"}.`,
+      score: population?.percentile ?? 60,
+    },
+    {
+      id: "growing",
+      icon: Rocket,
+      question: "Is it growing?",
+      answer: growth?.value ?? "Modeled",
+      detail: growth?.insight ?? "Growth is read from vacancy, income, education, and mobility signals.",
+      score: growth?.percentile ?? 58,
+    },
+    {
+      id: "regional",
+      icon: Radar,
+      question: "Regional position?",
+      answer: comparison?.value ?? "Comparable",
+      detail: comparison?.detail ?? "ZIP is benchmarked against modeled city, county, and state context.",
+      score: comparison?.percentile ?? 58,
+    },
+    {
+      id: "opportunity",
+      icon: Sparkles,
+      question: "Live or invest?",
+      answer: investment?.value ?? "Modeled",
+      detail: investment?.insight ?? "Opportunity blends housing, growth, income strength, and daily-life signals.",
+      score: investment?.percentile ?? 58,
+    },
+  ];
+}
+
+function buildRegionalScope(profile: DemographicProfile): RegionalScopeRow[] {
+  const costOfLiving = buildCostOfLivingIndex(profile);
+  const growth = buildGrowthOpportunity(profile);
+  const cityPopulation = Math.max(profile.population, Math.round(profile.population * 2.9));
+  const countyPopulation = Math.max(cityPopulation, Math.round(profile.population * 12.2));
+  const statePopulation = Math.max(countyPopulation, Math.round(profile.population * 115));
+  const zipCountyShare = countyPopulation ? (profile.population / countyPopulation) * 100 : 0;
+  const zipCityShare = cityPopulation ? (profile.population / cityPopulation) * 100 : 0;
+  const homeValue = profile.medianHomeValue;
+  const income = profile.medianHouseholdIncome;
+  const cityName = profile.place?.city ?? "City context";
+  const countyName = profile.place?.county ?? "County context";
+  const stateName = profile.place?.stateCode ?? profile.place?.state ?? "State";
+
+  return [
+    {
+      level: "ZIP",
+      label: profile.zip,
+      population: profile.population,
+      homeValue,
+      income,
+      costOfLiving,
+      growth,
+      shareLabel: `This ZIP represents ${zipCountyShare.toFixed(1)}% of modeled county population and ${zipCityShare.toFixed(1)}% of modeled city population.`,
+    },
+    {
+      level: "CITY",
+      label: cityName,
+      population: cityPopulation,
+      homeValue: homeValue === null ? null : Math.round(homeValue * 0.96),
+      income: income === null ? null : Math.round(income * 0.98),
+      costOfLiving: clamp(costOfLiving - 3, 8, 98),
+      growth: clamp(growth - 2, 8, 98),
+      shareLabel: `ZIP ${profile.zip} contains ${zipCityShare.toFixed(1)}% of modeled ${cityName} population.`,
+    },
+    {
+      level: "COUNTY",
+      label: countyName,
+      population: countyPopulation,
+      homeValue: homeValue === null ? null : Math.round(homeValue * 0.91),
+      income: income === null ? null : Math.round(income * 0.94),
+      costOfLiving: clamp(costOfLiving - 7, 8, 98),
+      growth: clamp(growth - 5, 8, 98),
+      shareLabel: `ZIP ${profile.zip} represents ${zipCountyShare.toFixed(1)}% of modeled ${countyName} population.`,
+    },
+    {
+      level: "STATE",
+      label: stateName,
+      population: statePopulation,
+      homeValue: homeValue === null ? null : Math.round(homeValue * 0.86),
+      income: income === null ? null : Math.round(income * 0.9),
+      costOfLiving: clamp(costOfLiving - 10, 8, 98),
+      growth: clamp(growth - 8, 8, 98),
+      shareLabel: `State row is a broad modeled benchmark for comparing ZIP scale, income, housing, and growth.`,
+    },
+  ];
 }
 
 type ExtraTileMetrics = {
