@@ -341,6 +341,7 @@ function PublicPropertyRows({
       {isExpanded && (
         <tr className="transaction-row">
           <td colSpan={5}>
+            <TaxRecordContinuation record={record} />
             {record.transactions.length ? (
               <TransactionTimeline transactions={record.transactions} verified />
             ) : (
@@ -350,6 +351,47 @@ function PublicPropertyRows({
         </tr>
       )}
     </>
+  );
+}
+
+function TaxRecordContinuation({ record }: { record: PublicPropertyRecord }) {
+  const effectiveAssessmentRatio = record.marketValue > 0 ? record.assessedValue / record.marketValue : null;
+  const taxableRatio = record.marketValue > 0 ? record.taxableValue / record.marketValue : null;
+  const taxableDiscount = record.marketValue > record.taxableValue ? record.marketValue - record.taxableValue : null;
+  const latestSale = record.transactions[0];
+
+  return (
+    <section className="verified-tax-continuation" aria-label={`Tax record continuation for ${record.streetAddress}`}>
+      <div className="verified-tax-header">
+        <div>
+          <span className="mono-label">Official Tax Continuation</span>
+          <h4>{record.streetAddress}</h4>
+          <p>Public appraiser values are carried forward here so the verified tax record keeps reading after the row opens.</p>
+        </div>
+        <div className="verified-tax-actions">
+          <a href={record.sourceUrl} target="_blank" rel="noreferrer">Parcel card</a>
+          {record.taxCollectorUrl && <a href={record.taxCollectorUrl} target="_blank" rel="noreferrer">Tax collector</a>}
+        </div>
+      </div>
+      <div className="tax-continuation-grid">
+        <TaxMetric label="Market value" value={formatCurrency(record.marketValue)} detail="Property appraiser value" />
+        <TaxMetric label="Assessed value" value={formatCurrency(record.assessedValue)} detail={effectiveAssessmentRatio === null ? "Assessment ratio unavailable" : `${formatPercent(effectiveAssessmentRatio)} of market value`} />
+        <TaxMetric label="Taxable value" value={formatCurrency(record.taxableValue)} detail={taxableRatio === null ? "Taxable ratio unavailable" : `${formatPercent(taxableRatio)} of market value`} />
+        <TaxMetric label="Exemption / cap gap" value={taxableDiscount === null ? "-" : formatCurrency(taxableDiscount)} detail={record.ownerOccupied ? "Homestead flagged on public record" : "No homestead flag on returned row"} />
+        <TaxMetric label="Folio" value={record.folio} detail={`PIN ${record.pin}`} />
+        <TaxMetric label="Latest sale" value={record.salePrice ? formatCurrency(record.salePrice) : "-"} detail={record.saleDate ? new Date(record.saleDate).toLocaleDateString() : latestSale?.saleDate ? new Date(latestSale.saleDate).toLocaleDateString() : "Sale date unavailable"} />
+      </div>
+    </section>
+  );
+}
+
+function TaxMetric({ label, value, detail }: { label: string; value: string; detail: string }) {
+  return (
+    <article className="tax-metric">
+      <span>{label}</span>
+      <strong>{value}</strong>
+      <em>{detail}</em>
+    </article>
   );
 }
 

@@ -34,6 +34,26 @@ export default defineConfig(({ mode }) => {
       {
         name: "zipscope-demographics-api",
         configureServer(server) {
+          server.middlewares.use("/api/real-estate-records", async (request, response) => {
+            const requestUrl = new URL((request as { originalUrl?: string }).originalUrl ?? request.url ?? "", "http://localhost");
+            const handlerModule = await import("./api/real-estate-records.js") as {
+              default: (request: { query: Record<string, string> }, response: VercelJsonResponse) => Promise<void>;
+            };
+            const query = Object.fromEntries(requestUrl.searchParams.entries());
+            const vercelResponse: VercelJsonResponse = {
+              status(code: number) {
+                response.statusCode = code;
+                return vercelResponse;
+              },
+              json(payload: unknown) {
+                response.setHeader("Content-Type", "application/json");
+                response.end(JSON.stringify(payload));
+              },
+            };
+
+            await handlerModule.default({ query }, vercelResponse);
+          });
+
           server.middlewares.use("/api/demographics", async (request, response) => {
             const requestUrl = new URL(request.url ?? "", "http://localhost");
             const zip = requestUrl.searchParams.get("zip")?.trim() ?? "";
@@ -111,6 +131,11 @@ export default defineConfig(({ mode }) => {
     ],
   };
 });
+
+type VercelJsonResponse = {
+  status: (code: number) => VercelJsonResponse;
+  json: (payload: unknown) => void;
+};
 
 function mapCensusRecord(record: Record<string, string>, zip: string) {
   return {
