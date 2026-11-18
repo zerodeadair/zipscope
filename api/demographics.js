@@ -143,7 +143,9 @@ function percentToRatio(value) {
 
 async function fetchCensusReporterFallback(zip) {
   try {
-    const fallbackResponse = await fetch(`https://censusreporter.org/profiles/86000US${zip}-${zip}/`);
+    const fallbackResponse = await fetch(`https://censusreporter.org/profiles/86000US${zip}-${zip}/`, {
+      headers: { "User-Agent": "ZipScope/1.0 (+https://github.com/zerodeadair/zipscope)" },
+    });
     if (!fallbackResponse.ok) return null;
     const html = await fallbackResponse.text();
     const profileData = parseCensusReporterProfileData(html);
