@@ -7218,3 +7218,130 @@ body,
   color: #31596d !important;
   font-weight: 680 !important;
 }
+
+.sidebar {
+  top: var(--scope-nav-top, 0px);
+  height: calc(100vh - var(--scope-nav-top, 0px));
+}
+
+.insight-panel { top: calc(22px + var(--scope-nav-top, 0px)); }
+.mobile-section-nav { display: none; }
+
+.stat-card-value {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+}
+
+#root .metric-provenance {
+  display: inline-flex;
+  width: fit-content;
+  margin-inline-start: 0.42em;
+  padding: 0.12em 0.42em;
+  border: 1px solid #ad8b49;
+  border-radius: 4px;
+  color: #62420f !important;
+  background: #fff2d4;
+  font: 700 0.68rem/1.25 system-ui, sans-serif !important;
+  letter-spacing: normal !important;
+  text-transform: none;
+  vertical-align: middle;
+}
+
+#root .dark-theme .metric-provenance {
+  color: #ffe7b0 !important;
+  background: #46371e;
+}
+
+@media (max-width: 760px) {
+  .sidebar { height: auto; }
+}
+
+@media (max-width: 599px) {
+  .app-shell {
+    width: 100%;
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .app-shell > .sidebar { display: none; }
+  .topbar { flex-direction: row; align-items: center; flex-wrap: wrap; }
+  .hero-intel-column > .zip-console { order: -1; }
+  .weather-forecast-strip {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    overflow: visible;
+  }
+  .weather-day { min-width: 0; }
+  #root .weather-day .metric-provenance { margin-inline-start: 0; }
+  .tile-group-chips { flex-wrap: wrap; overflow: visible; }
+
+  .mobile-section-nav {
+    display: block;
+    margin: 12px 0;
+    padding: 8px 12px;
+    border: 1px solid var(--z-line-soft);
+    border-radius: 8px;
+  }
+  .mobile-section-nav summary {
+    min-height: 32px;
+    cursor: pointer;
+  }
+  .mobile-section-nav nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 10px;
+  }
+  .mobile-section-nav nav :is(a, button) {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    min-height: 44px;
+  }
+
+  .app-shell :is(
+    .content-grid, .stat-grid, .chart-grid, .event-grid, .source-card-grid,
+    .home-value-hero, .real-estate-chart-grid, .ownership-intel-grid,
+    .tax-continuation-grid, .expanded-demographic-grid, .pulse-grid, .headline-grid,
+    .market-tile-grid, .premium-intel-grid
+  ) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  :is(.table-wrap, .property-table-wrap) { overflow: visible; }
+  :is(.table-wrap, .property-table-wrap) table {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+  :is(.table-wrap, .property-table-wrap) :is(table, tbody, tr, td) { display: block; }
+  :is(.table-wrap, .property-table-wrap) thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  :is(.table-wrap, .property-table-wrap) tr:not(.transaction-row) {
+    margin-bottom: 12px;
+    border: 1px solid var(--z-line-soft);
+    border-radius: 8px;
+  }
+  :is(.table-wrap, .property-table-wrap) td[data-label]::before {
+    content: attr(data-label);
+    display: block;
+    margin-bottom: 4px;
+    font-size: 0.72rem;
+    font-weight: 700;
+  }
+
+  .tile-insight-panel { bottom: calc(74px + var(--scope-nav-bottom, 0px)); }
+  .mobile-action-bar { bottom: calc(10px + var(--scope-nav-bottom, 0px)); }
+  .zipscope-toast { bottom: calc(84px + var(--scope-nav-bottom, 0px)); }
+  .image-export-preview { bottom: calc(18px + var(--scope-nav-bottom, 0px)); }
+}
+
+@media print {
+  body.scope-shell { padding: 0; }
+  .scope-nav { display: none; }
+}

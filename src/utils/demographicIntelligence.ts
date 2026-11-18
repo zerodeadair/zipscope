@@ -191,10 +191,10 @@ export function buildInfographicRows(profile: DemographicProfile, similarAreas: 
       ["Home value / rent proxy", profile.medianHomeValue === null ? "Estimate unavailable" : `${formatCurrency(profile.medianHomeValue)} median owner value`],
       ["Age profile", profile.medianAge === null ? "Data unavailable" : `${profile.medianAge.toFixed(1)} median age`],
       ["Education snapshot", profile.bachelorsOrHigherRate === null ? "Data unavailable" : `${formatPercent(profile.bachelorsOrHigherRate)} bachelor's+`],
-      ["Employment / industry proxy", signals[1]?.value ?? "Coming soon"],
-      ["Cost of living snapshot", signals[3]?.value ?? "Beta estimate"],
+      ["Employment / industry proxy", signals[1] ? signals[1].value + " Modeled" : "Coming soon"],
+      ["Cost of living snapshot", signals[3] ? signals[3].value + " Modeled" : "Beta estimate"],
     ],
-    similarPreview: similarAreas.map((area) => `${area.zip} ${area.city}, ${area.stateCode} - ${area.matchScore}% match`),
+    similarPreview: similarAreas.map((area) => `${area.zip} ${area.city}, ${area.stateCode} - ${area.matchScore}% Beta match`),
     insight: topInsights[0] ?? "Top insight unavailable.",
     sourceNote: `${profile.sourceName}; ZIP approximated as Census ZCTA ${profile.zcta}. Last checked ${new Date(profile.lastUpdated).toLocaleDateString()}.`,
   };

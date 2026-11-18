@@ -1,3 +1,4 @@
+import MetricProvenance from "./MetricProvenance";
 import { BrainCircuit, ChevronRight, FileText, GitCompareArrows, Lightbulb, LineChart, ListChecks, Radar, ScanSearch, ShieldCheck, Sparkles, Workflow } from "lucide-react";
 import { useMemo, useState } from "react";
 import type { OddsQuote } from "../providers/oddsProvider";
@@ -47,7 +48,7 @@ export default function AIToolsPanel({
         </div>
         <div className="ai-confidence-card">
         <span>Confidence</span>
-          <strong>{model.confidence}%</strong>
+          <strong>{model.confidence}%<MetricProvenance /></strong>
           <small>{model.confidenceLabel} confidence from available {profile ? "public sources" : "public/demo sources"}</small>
           <div><i style={{ width: `${model.confidence}%` }} /></div>
         </div>
@@ -58,9 +59,9 @@ export default function AIToolsPanel({
           <div className="ai-card-title"><Sparkles size={17} /> AI Insight Summary</div>
           <p>{model.summary}</p>
           <div className="ai-signal-row">
-            <span>{profile ? "Market Score" : "Screen Score"} <b>{activeScore}</b></span>
-            <span>Events <b>{events.length}</b></span>
-            <span>Odds <b>{odds.length}</b></span>
+            <span>{profile ? "Market Score" : "Screen Score"} <b>{activeScore}<MetricProvenance /></b></span>
+            <span>Events <b>{events.length}<MetricProvenance>Beta</MetricProvenance></b></span>
+            <span>Odds <b>{odds.length}<MetricProvenance>Beta</MetricProvenance></b></span>
           </div>
         </article>
 
@@ -87,10 +88,10 @@ export default function AIToolsPanel({
             </select>
           </label>
           <div className="comparison-grid">
-            <ComparisonMetric label={profile ? "Population" : "Event Coverage"} left={profile ? formatNumber(profile.population) : `${events.length} events`} right={profile ? formatNumber(peer.population) : "Benchmark slate"} />
-            <ComparisonMetric label={profile ? "Median Income" : "Odds Coverage"} left={profile?.medianHouseholdIncome === null ? "Unavailable" : profile ? formatCurrency(profile.medianHouseholdIncome) : `${odds.length} quotes`} right={profile ? formatCurrency(peer.income) : "Peer provider set"} />
-            <ComparisonMetric label={profile ? "Market Score" : "Screen Score"} left={`${activeScore}`} right={`${peer.marketScore}`} />
-            <ComparisonMetric label="Sports Index" left={`${Math.min(98, events.length * 9 + 34)}`} right={`${peer.sportsIndex}`} />
+            <ComparisonMetric label={profile ? "Population" : "Event Coverage"} left={profile ? formatNumber(profile.population) : `${events.length} Beta events`} right={profile ? formatNumber(peer.population) + " Modeled" : "Benchmark slate"} />
+            <ComparisonMetric label={profile ? "Median Income" : "Odds Coverage"} left={profile?.medianHouseholdIncome === null ? "Unavailable" : profile ? formatCurrency(profile.medianHouseholdIncome) : `${odds.length} Beta quotes`} right={profile ? formatCurrency(peer.income) + " Modeled" : "Peer provider set"} />
+            <ComparisonMetric label={profile ? "Market Score" : "Screen Score"} left={`${activeScore} Modeled`} right={`${peer.marketScore} Modeled`} />
+            <ComparisonMetric label="Sports Index" left={`${Math.min(98, events.length * 9 + 34)} Modeled`} right={`${peer.sportsIndex} Modeled`} />
           </div>
         </article>
 
@@ -101,7 +102,7 @@ export default function AIToolsPanel({
             {model.forecast.map((item) => (
               <div className={`forecast-pill ${item.tone}`} key={item.label}>
                 <span>{item.label}</span>
-                <strong>{item.value}</strong>
+                <strong>{item.value}{/\d/.test(item.value) && <MetricProvenance>Estimated</MetricProvenance>}</strong>
               </div>
             ))}
           </div>
@@ -132,7 +133,7 @@ export default function AIToolsPanel({
             {model.anomalyRadar.map((item) => (
               <div className={`anomaly-radar-item ${item.tone}`} key={item.label}>
                 <span>{item.label}</span>
-                <strong>{item.value}</strong>
+                <strong>{item.value}{item.label === "Sports adapter density" && <MetricProvenance>Beta</MetricProvenance>}</strong>
                 <p>{item.detail}</p>
               </div>
             ))}
@@ -159,7 +160,7 @@ export default function AIToolsPanel({
               <label key={factor.label}>
                 {factor.label}
                 <span><i style={{ width: `${factor.score}%` }} /></span>
-                <b>{factor.score}%</b>
+                <b>{factor.score}%<MetricProvenance /></b>
               </label>
             ))}
           </div>

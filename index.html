@@ -2,14 +2,28 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta
       name="description"
       content="ZipScope combines ZIP code demographics, local market signals, civic intelligence, weather, sports events, and public odds."
     />
     <title>ZipScope</title>
+    <link rel="stylesheet" href="https://golfscope.vercel.app/scope-nav.css" />
   </head>
-  <body>
+  <body class="scope-shell">
+    <nav class="scope-nav" aria-label="Scope apps">
+      <span class="scope-nav__brand">
+        <img src="https://golfscope.vercel.app/mark.svg" width="28" height="28" alt="">
+        <span>Scope</span>
+      </span>
+      <div class="scope-nav__links">
+        <a href="https://golfscope.vercel.app/apps/">All Apps</a>
+        <a href="https://golfscope.vercel.app/">Golf Scope</a>
+        <a href="https://zipscope-blond.vercel.app/" aria-current="page">ZipScope</a>
+        <a href="https://golfscope.vercel.app/apps/headlines/">HeadNews Scope</a>
+        <a href="https://golfscope.vercel.app/apps/lottery/">ScratchScope</a>
+      </div>
+    </nav>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

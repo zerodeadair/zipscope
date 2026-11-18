@@ -66,7 +66,7 @@ export function buildAiInsightModel(
   const civicTone = poverty > 0.18 || vacancy > 0.12 ? "alert" : poverty > 0.12 || vacancy > 0.08 ? "watch" : "stable";
 
   return {
-    summary: `${profile.displayName} is reading as a ${marketScore >= 72 ? "high-signal" : marketScore >= 52 ? "balanced" : "developing"} market with ${formatNumber(profile.population)} residents, ${formatOptionalCurrency(profile.medianHouseholdIncome)} median household income, and ${events.length} visible sports events in the current slate.`,
+    summary: `${profile.displayName} is reading as a ${marketScore >= 72 ? "high-signal" : marketScore >= 52 ? "balanced" : "developing"} market with ${formatNumber(profile.population)} residents, ${formatOptionalCurrency(profile.medianHouseholdIncome)} median household income, and ${events.length} visible Beta sports events in the current slate.`,
     confidence,
     confidenceLabel: confidence >= 82 ? "High" : confidence >= 66 ? "Medium" : "Directional",
     riskSignals: [
@@ -74,7 +74,7 @@ export function buildAiInsightModel(
         ? `Elevated poverty signal at ${(profile.povertyRate * 100).toFixed(1)}%; civic or affordability context should be reviewed before action.`
         : "No elevated demographic risk threshold triggered by the current sourced profile.",
       odds.length
-        ? `${odds.length} odds quotes are demo-normalized; treat market movement as a UI simulation until a live odds provider is connected.`
+        ? `${odds.length} Beta odds quotes use simulated data; treat market movement as a UI simulation until a live odds provider is connected.`
         : "Sports odds coverage is thin for the current filters, reducing comparison strength.",
       profile.place ? "ZIP-to-ZCTA geography is resolved, but USPS ZIP areas and Census ZCTAs are not exact boundaries." : "Place metadata is incomplete, so geographic comparisons should stay conservative.",
     ],
@@ -152,7 +152,7 @@ export function buildAiInsightModel(
       },
     ],
     executiveBrief: [
-      `${profile.displayName} currently scores ${marketScore}/100 on the local market signal model.`,
+      `${profile.displayName} has a modeled score of ${marketScore}/100 on the local market signal model.`,
       `Primary public-data anchors are Census ACS/ZCTA demographics, place lookup metadata, sports event adapters, and normalized public odds fields.`,
       "Forecast outputs are demo estimates intended to show product behavior; they are not guarantees, recommendations, or betting advice.",
     ],

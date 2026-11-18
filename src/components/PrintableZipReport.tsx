@@ -1,3 +1,4 @@
+import MetricProvenance from "./MetricProvenance";
 import type { OddsQuote } from "../providers/oddsProvider";
 import type { SportsEvent } from "../providers/sportsEventsProvider";
 import type { DemographicProfile } from "../types/demographics";
@@ -118,7 +119,7 @@ export default function PrintableZipReport({ events, odds, pinnedTileIds, profil
             {signals.slice(0, 6).map((signal) => (
               <div key={signal.label}>
                 <span>{signal.label}</span>
-                <strong>{signal.value}</strong>
+                <strong>{signal.value}<MetricProvenance /></strong>
                 <i><b style={{ width: `${signal.score}%` }} /></i>
               </div>
             ))}
@@ -152,7 +153,7 @@ export default function PrintableZipReport({ events, odds, pinnedTileIds, profil
             <article key={area.zip}>
               <div>
                 <strong>{area.zip}</strong>
-                <span>{area.matchScore}% match</span>
+                <span>{area.matchScore}% match<MetricProvenance>Beta</MetricProvenance></span>
               </div>
               <h3>{area.city}, {area.stateCode}</h3>
               <p>{area.similarities.join(" / ")}</p>
@@ -181,7 +182,7 @@ export default function PrintableZipReport({ events, odds, pinnedTileIds, profil
           <div className="export-text-stack">
             {oddsItems.length ? oddsItems.map((quote) => (
               <p key={`${quote.eventId}-${quote.provider}-${quote.market}`}>
-                {quote.provider} / {quote.market} / {formatOddsQuote(quote)}
+                {quote.provider} / {quote.market} / {formatOddsQuote(quote)} (Beta)
               </p>
             )) : <p>Odds unavailable.</p>}
           </div>

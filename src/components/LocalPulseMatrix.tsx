@@ -1,3 +1,4 @@
+import MetricProvenance from "./MetricProvenance";
 import { Gauge, RadioTower, ShieldCheck } from "lucide-react";
 import { useMemo, useState } from "react";
 import type { DemographicProfile } from "../types/demographics";
@@ -8,6 +9,7 @@ type Horizon = "now" | "2030" | "2040";
 type PulseCard = {
   label: string;
   value: string;
+  modeled?: boolean;
   detail: string;
   tone: "cyan" | "violet" | "mint" | "blue";
 };
@@ -46,7 +48,7 @@ export default function LocalPulseMatrix({ profile }: { profile: DemographicProf
         {matrix.cards.map((card) => (
           <article className={`pulse-card ${card.tone}`} key={card.label}>
             <span>{card.label}</span>
-            <strong>{card.value}</strong>
+            <strong>{card.value}{card.modeled && <MetricProvenance />}</strong>
             <p>{card.detail}</p>
           </article>
         ))}
@@ -82,6 +84,7 @@ function buildPulseMatrix(profile: DemographicProfile, horizon: Horizon) {
     {
       label: "Population trajectory",
       value: formatNumber(population),
+      modeled: horizon !== "now",
       detail: horizon === "now" ? "Current ACS population baseline." : `${horizon} scenario band using a conservative local-growth multiplier.`,
       tone: "cyan",
     },
@@ -100,6 +103,7 @@ function buildPulseMatrix(profile: DemographicProfile, horizon: Horizon) {
     {
       label: "Access friction",
       value: `${accessScore}/100`,
+      modeled: true,
       detail: "Composite of commute, vacancy, and poverty stress markers for planning context.",
       tone: accessScore > 58 ? "violet" : "cyan",
     },

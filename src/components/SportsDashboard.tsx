@@ -1,3 +1,4 @@
+import MetricProvenance from "./MetricProvenance";
 import { CalendarDays, Filter, MapPin } from "lucide-react";
 import { useMemo, useState } from "react";
 import { OddsMarket, OddsQuote } from "../providers/oddsProvider";
@@ -42,9 +43,9 @@ export default function SportsDashboard({ events, odds }: { events: SportsEvent[
       <div className="event-grid">
         {filteredEvents.map((event) => (
           <article className="event-card" key={event.id}>
-            <span>{event.league} | {event.eventType}</span>
+            <span>{event.league} | {event.eventType}<MetricProvenance>Beta</MetricProvenance></span>
             <h3>{event.awayTeam} at {event.homeTeam}</h3>
-            <p><CalendarDays size={15} /> {new Date(event.startsAt).toLocaleString()}</p>
+            <p><CalendarDays size={15} /> {new Date(event.startsAt).toLocaleString()}<MetricProvenance>Beta</MetricProvenance></p>
             <p><MapPin size={15} /> {event.venue}, {event.location}</p>
           </article>
         ))}

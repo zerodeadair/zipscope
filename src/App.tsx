@@ -67,7 +67,13 @@ export default function App() {
   }, [pinnedTileIds]);
 
   useEffect(() => {
-    if (!loading && profile && !hasAutoFocusedDemographics && !window.location.hash) {
+    if (
+      !loading &&
+      profile &&
+      !hasAutoFocusedDemographics &&
+      !window.location.hash &&
+      !window.matchMedia("(max-width: 599px)").matches
+    ) {
       setHasAutoFocusedDemographics(true);
       window.history.replaceState(null, "", "#demographics");
       requestAnimationFrame(() => document.getElementById("demographics")?.scrollIntoView({ block: "start" }));
@@ -168,11 +174,8 @@ export default function App() {
     document.getElementById("search")?.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
-  return (
-    <div className={`app-shell ${isDark ? "dark-theme" : "day-theme"}`}>
-      <aside className="sidebar">
-        <div className="logo-orb"><Orbit size={24} /></div>
-        <nav>
+  const sectionNavigation = (
+    <nav aria-label="ZipScope sections">
           <a href="#search"><DatabaseZap size={18} /> Search</a>
           <a href="#demographics"><BarChart3 size={18} /> Demographics</a>
           <a href="#real-estate"><Home size={18} /> Homes</a>
@@ -189,7 +192,14 @@ export default function App() {
             <Download size={18} /> {exportingImage ? "Building" : "Full Image"}
           </button>
           <a href="#notice"><Shield size={18} /> Responsible Use</a>
-        </nav>
+    </nav>
+  );
+
+  return (
+    <div className={`app-shell ${isDark ? "dark-theme" : "day-theme"}`}>
+      <aside className="sidebar">
+        <div className="logo-orb"><Orbit size={24} /></div>
+        {sectionNavigation}
       </aside>
       <main>
         <header className="topbar">
@@ -208,6 +218,10 @@ export default function App() {
             weatherPlace={profile?.place ?? demographicError?.place ?? null}
           />
         </div>
+        <details className="mobile-section-nav">
+          <summary>Dashboard sections</summary>
+          {sectionNavigation}
+        </details>
         <div className="compact-command-strip"><AdvancedControlDeck profile={profile} zip={zip} loading={loading} /></div>
         {error && <ErrorState message={error} />}
         {loading && <LoadingState message="Pulling Census profile..." />}

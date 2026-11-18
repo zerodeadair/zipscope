@@ -1,3 +1,4 @@
+import MetricProvenance from "./MetricProvenance";
 import { ArrowRightLeft, BadgeInfo, MapPinned, Sparkles } from "lucide-react";
 import type { DemographicProfile } from "../types/demographics";
 import { buildSimilarAreas } from "../utils/demographicIntelligence";
@@ -23,7 +24,7 @@ export default function SimilarAreasBeta({ profile }: { profile: DemographicProf
               <div className="similar-area-title">
                 <MapPinned size={17} />
                 <strong>{area.zip} {area.city}, {area.stateCode}</strong>
-                <span>{area.matchScore}% match</span>
+                <span>{area.matchScore}% match<MetricProvenance>Beta</MetricProvenance></span>
               </div>
               <p>{area.why}</p>
               <div className="similar-tag-row">

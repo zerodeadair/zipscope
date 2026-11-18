@@ -1,3 +1,4 @@
+import MetricProvenance from "./MetricProvenance";
 import { Activity, AlertTriangle, ArrowRightLeft, Banknote, Binary, Clipboard, ClipboardList, Database, Download, FileDown, HelpCircle, Lightbulb, Printer, RadioTower, Save, ShieldCheck, Sparkles, Target, TrendingDown, TrendingUp, Trophy, Users, WandSparkles } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import type { ReactNode } from "react";
@@ -68,7 +69,7 @@ export default function InsightPanel({ isExportingImage = false, onCopySummary, 
       <div className="score-ring">
         <div className="orb-core" />
         <strong>{score}</strong>
-        <span>market score</span>
+        <span>Modeled market score</span>
       </div>
 
       <div className="future-intel-header">
@@ -79,7 +80,7 @@ export default function InsightPanel({ isExportingImage = false, onCopySummary, 
       <div className="future-widget-stack" aria-label="2040 estimated AI intelligence widgets">
         {futureWidgets.map((widget, index) => (
           <SidebarWidget
-            badge="2040 est."
+            badge="2040 Estimated"
             icon={widget.icon}
             key={widget.id}
             open={isWidgetOpen(widget.id)}
@@ -88,7 +89,7 @@ export default function InsightPanel({ isExportingImage = false, onCopySummary, 
           >
             <div className="future-widget-body">
               <div className="future-widget-score">
-                <strong>{widget.value}</strong>
+                <strong>{widget.value}<MetricProvenance>Estimated</MetricProvenance></strong>
                 <span>{widget.label}</span>
               </div>
               <p>{widget.insight}</p>
@@ -134,7 +135,7 @@ export default function InsightPanel({ isExportingImage = false, onCopySummary, 
             <a href="#similar-areas" key={area.zip} title={`Beta match: ${area.why}`}>
               <span>{area.zip}</span>
               <strong>{area.city}, {area.stateCode}</strong>
-              <em>{area.matchScore}%</em>
+              <em>{area.matchScore}% Beta</em>
             </a>
           ))}
         </div>
@@ -143,16 +144,16 @@ export default function InsightPanel({ isExportingImage = false, onCopySummary, 
 
       <SidebarWidget icon={Target} title="Opportunity Radar" badge="AI" open={isWidgetOpen("opportunity")} onToggle={() => toggleWidget("opportunity")}>
         <InsightChips items={[
-          `Business: ${employmentSignal?.value ?? "Preview"}`,
-          `Real estate: ${growthSignal?.value ?? "Preview"}`,
-          `Sports/event: ${Math.min(96, score + 18)}/100 est.`,
+          `Business (Modeled): ${employmentSignal?.value ?? "Preview"}`,
+          `Real estate (Modeled): ${growthSignal?.value ?? "Preview"}`,
+          `Sports/event: ${Math.min(96, score + 18)}/100 Estimated`,
           `Restaurant/retail: ${profile.population > 35000 ? "High traffic" : "Targeted demand"}`,
         ]} />
       </SidebarWidget>
 
       <SidebarWidget icon={AlertTriangle} title="Risk Radar" badge="Preview" open={isWidgetOpen("risk")} onToggle={() => toggleWidget("risk")}>
         <InsightChips tone="risk" items={[
-          `Affordability: ${pressureSignal?.value ?? "Beta estimate"}`,
+          `Affordability (Modeled): ${pressureSignal?.value ?? "Beta estimate"}`,
           `Vacancy: ${formatOptionalPercent(profile.vacancyRate)}`,
           `Commute burden: ${profile.averageCommuteMinutes === null ? "Unavailable" : `${profile.averageCommuteMinutes.toFixed(1)} min`}`,
           `Poverty pressure: ${formatOptionalPercent(profile.povertyRate)}`,
@@ -217,12 +218,12 @@ export default function InsightPanel({ isExportingImage = false, onCopySummary, 
         <div>
           <TrendingUp size={16} />
           <span>Growth / stability</span>
-          <strong>{growthSignal?.value ?? "Beta estimate"}</strong>
+          <strong>{growthSignal?.value ?? "Beta estimate"}{growthSignal && <MetricProvenance />}</strong>
         </div>
         <div>
           <TrendingDown size={16} />
           <span>Cost pressure</span>
-          <strong>{pressureSignal?.value ?? "Beta estimate"}</strong>
+          <strong>{pressureSignal?.value ?? "Beta estimate"}{pressureSignal && <MetricProvenance />}</strong>
         </div>
       </div>
 
@@ -236,7 +237,7 @@ export default function InsightPanel({ isExportingImage = false, onCopySummary, 
           ].map(([label, value]) => (
             <label key={label}>
               <span>{label}</span>
-              <b>{value}/100</b>
+              <b>{value}/100<MetricProvenance /></b>
               <i><em style={{ width: `${Math.max(6, Number(value))}%` }} /></i>
             </label>
           ))}
@@ -350,26 +351,26 @@ function build2040IntelWidgets(profile: DemographicProfile, score: number): Futu
   const band = (value: number, high = "High", mid = "Medium", low = "Low") => value >= 70 ? high : value >= 45 ? mid : low;
 
   return [
-    futureWidget("future-market-shape", Sparkles, "2040 Market Shape", band(localCommerce, "Expanding", "Selective", "Niche"), "Scenario posture", "How the ZIP could read as a 2040 local market if today’s population, income, mobility, and digital signals persist.", [["Commerce", scoreText(localCommerce)], ["Resilience", scoreText(resilience)]]),
-    futureWidget("future-population-gravity", Users, "Population Gravity", scoreText(clamp(population / 850 + family * 0.28, 10, 98)), "Resident pull", "Estimates whether the ZIP has enough resident gravity to support future services without depending only on visitors.", [["Population", formatNumber(population)], ["Family", scoreText(family)]]),
-    futureWidget("future-income-ceiling", Banknote, "Income Ceiling", scoreText(clamp(income / 1200 + talent * 0.22 - costPressure * 0.12, 10, 96)), "Upside capacity", "A 2040-style read on whether local incomes and talent depth could support higher-value offers.", [["Income", formatOptionalCurrency(income)], ["Talent", scoreText(talent)]]),
-    futureWidget("future-cost-drag", AlertTriangle, "Cost Drag", scoreText(costPressure), "Affordability drag", "Estimates how much housing and poverty pressure could limit future consumer flexibility.", [["Home/income", `${affordabilityRatio.toFixed(1)}x`], ["Poverty", formatOptionalPercent(profile.povertyRate)]]),
+    futureWidget("future-market-shape", Sparkles, "2040 Market Shape", band(localCommerce, "Expanding", "Selective", "Niche"), "Scenario posture", "How the ZIP could read as a 2040 local market if today’s population, income, mobility, and digital signals persist.", [["Commerce", scoreText(localCommerce) + " Modeled"], ["Resilience", scoreText(resilience) + " Modeled"]]),
+    futureWidget("future-population-gravity", Users, "Population Gravity", scoreText(clamp(population / 850 + family * 0.28, 10, 98)), "Resident pull", "Estimates whether the ZIP has enough resident gravity to support future services without depending only on visitors.", [["Population", formatNumber(population)], ["Family", scoreText(family) + " Modeled"]]),
+    futureWidget("future-income-ceiling", Banknote, "Income Ceiling", scoreText(clamp(income / 1200 + talent * 0.22 - costPressure * 0.12, 10, 96)), "Upside capacity", "A 2040-style read on whether local incomes and talent depth could support higher-value offers.", [["Income", formatOptionalCurrency(income) + (profile.medianHouseholdIncome === null ? " Estimated" : "")], ["Talent", scoreText(talent) + " Modeled"]]),
+    futureWidget("future-cost-drag", AlertTriangle, "Cost Drag", scoreText(costPressure), "Affordability drag", "Estimates how much housing and poverty pressure could limit future consumer flexibility.", [["Home/income", `${affordabilityRatio.toFixed(1)}x Modeled`], ["Poverty", formatOptionalPercent(profile.povertyRate)]]),
     futureWidget("future-housing-adaptability", HomeIconFallback, "Housing Adaptability", scoreText(housing), "Housing flexibility", "Scenario signal for whether the housing base can adapt to family, rental, ownership, and workforce changes.", [["Owner", formatOptionalPercent(profile.ownerOccupiedRate)], ["Vacancy", formatOptionalPercent(profile.vacancyRate)]]),
-    futureWidget("future-mobility-layer", RadioTower, "Mobility Layer", scoreText(mobility), "Access evolution", "Future-read on whether commute and density patterns can support smoother mobility, delivery, and service access.", [["Commute", `${commute.toFixed(1)} min`], ["Density", `${densityProxy}/mi2`]]),
-    futureWidget("future-digital-twin", Binary, "Digital Twin Fit", scoreText(digital), "Digital readiness", "Estimates readiness for app-based services, remote work, online ordering, and AI-powered local tools.", [["Broadband proxy", scoreText(digital)], ["College+", formatOptionalPercent(profile.bachelorsOrHigherRate)]]),
-    futureWidget("future-ai-commerce", WandSparkles, "AI Commerce Fit", scoreText(automation), "Automated commerce", "A 2040 scenario score for AI-assisted retail, booking, customer support, and local service automation.", [["Digital", scoreText(digital)], ["Commerce", scoreText(localCommerce)]]),
-    futureWidget("future-workforce-pivot", BriefcaseIconFallback, "Workforce Pivot", scoreText(talent), "Talent adaptability", "Reads whether the education and digital base can support future workforce shifts.", [["College+", formatOptionalPercent(profile.bachelorsOrHigherRate)], ["Digital", scoreText(digital)]]),
-    futureWidget("future-family-engine", Target, "Family Engine", scoreText(family), "Family demand", "Estimates future family-serving demand across schools, youth activity, healthcare, food, and local services.", [["Owner", formatOptionalPercent(profile.ownerOccupiedRate)], ["School", `${Math.round(highSchool * 100)}%`]]),
-    futureWidget("future-aging-demand", ShieldCheck, "Aging Demand", scoreText(health), "Care economy", "A 2040-style care signal for healthcare, accessibility, pharmacy, mobility, and senior services.", [["Senior proxy", `${senior}%`], ["Health demand", scoreText(health)]]),
-    futureWidget("future-climate-friction", UmbrellaIconFallback, "Climate Friction", scoreText(climate), "Weather exposure", "Estimated climate and weather friction for future operations, outdoor demand, and resilience planning.", [["Weather risk", scoreText(climate)], ["Vacancy", formatOptionalPercent(profile.vacancyRate)]]),
-    futureWidget("future-sports-economy", Trophy, "Sports Economy", scoreText(sports), "Sports demand", "Scenario read on future sports viewing, participation, event demand, and local fan energy.", [["Sports", scoreText(sports)], ["Digital", scoreText(digital)]]),
-    futureWidget("future-youth-sports", Trophy, "Youth Sports 2040", scoreText(youthSports), "Youth activity", "Estimates future youth sports, camps, clinics, and family weekend activity potential.", [["Family", scoreText(family)], ["Mobility", scoreText(mobility)]]),
-    futureWidget("future-visitor-layer", MapIconFallback, "Visitor Layer", scoreText(visitor), "Event/visitor pull", "Future-facing estimate of visitor, event, and pass-through demand.", [["Visitor", scoreText(visitor)], ["Mobility", scoreText(mobility)]]),
-    futureWidget("future-local-energy", Activity, "Local Energy", scoreText(energy), "Momentum feel", "Blends commerce, resilience, digital readiness, and climate friction into a future local energy score.", [["Energy", scoreText(energy)], ["Resilience", scoreText(resilience)]]),
-    futureWidget("future-risk-stack", AlertTriangle, "2040 Risk Stack", band((costPressure + climate + (100 - resilience)) / 3, "Watch closely", "Manageable", "Low"), "Composite risk", "Top future risks compressed into one planning label.", [["Cost", scoreText(costPressure)], ["Climate", scoreText(climate)]]),
-    futureWidget("future-opportunity-stack", Lightbulb, "2040 Opportunity", scoreText((localCommerce + sports + digital + housing) / 4), "Composite upside", "Future opportunity blend across commerce, sports, digital readiness, and housing adaptability.", [["Commerce", scoreText(localCommerce)], ["Sports", scoreText(sports)]]),
-    futureWidget("future-comparison-readiness", ArrowRightLeft, "Peer Readiness", scoreText(compare), "Compare quality", "Estimates how useful this ZIP will be in future peer matching workflows.", [["Coverage", scoreText(compare)], ["Report", scoreText(report)]]),
-    futureWidget("future-investor-brief", ClipboardList, "Investor Brief", scoreText(report), "2040 report grade", "One compact score for whether this ZIP deserves a future-facing investor-style summary.", [["Brief grade", scoreText(report)], ["Market", scoreText(score)]]),
+    futureWidget("future-mobility-layer", RadioTower, "Mobility Layer", scoreText(mobility), "Access evolution", "Future-read on whether commute and density patterns can support smoother mobility, delivery, and service access.", [["Commute", `${commute.toFixed(1)} min` + (profile.averageCommuteMinutes === null ? " Estimated" : "")], ["Density", `${densityProxy}/mi2 Modeled`]]),
+    futureWidget("future-digital-twin", Binary, "Digital Twin Fit", scoreText(digital), "Digital readiness", "Estimates readiness for app-based services, remote work, online ordering, and AI-powered local tools.", [["Broadband proxy", scoreText(digital) + " Modeled"], ["College+", formatOptionalPercent(profile.bachelorsOrHigherRate)]]),
+    futureWidget("future-ai-commerce", WandSparkles, "AI Commerce Fit", scoreText(automation), "Automated commerce", "A 2040 scenario score for AI-assisted retail, booking, customer support, and local service automation.", [["Digital", scoreText(digital) + " Modeled"], ["Commerce", scoreText(localCommerce) + " Modeled"]]),
+    futureWidget("future-workforce-pivot", BriefcaseIconFallback, "Workforce Pivot", scoreText(talent), "Talent adaptability", "Reads whether the education and digital base can support future workforce shifts.", [["College+", formatOptionalPercent(profile.bachelorsOrHigherRate)], ["Digital", scoreText(digital) + " Modeled"]]),
+    futureWidget("future-family-engine", Target, "Family Engine", scoreText(family), "Family demand", "Estimates future family-serving demand across schools, youth activity, healthcare, food, and local services.", [["Owner", formatOptionalPercent(profile.ownerOccupiedRate)], ["School", `${Math.round(highSchool * 100)}%` + (profile.highSchoolGradRate === null ? " Estimated" : "")]]),
+    futureWidget("future-aging-demand", ShieldCheck, "Aging Demand", scoreText(health), "Care economy", "A 2040-style care signal for healthcare, accessibility, pharmacy, mobility, and senior services.", [["Senior proxy", `${senior}% Modeled`], ["Health demand", scoreText(health) + " Modeled"]]),
+    futureWidget("future-climate-friction", UmbrellaIconFallback, "Climate Friction", scoreText(climate), "Weather exposure", "Estimated climate and weather friction for future operations, outdoor demand, and resilience planning.", [["Weather risk", scoreText(climate) + " Modeled"], ["Vacancy", formatOptionalPercent(profile.vacancyRate)]]),
+    futureWidget("future-sports-economy", Trophy, "Sports Economy", scoreText(sports), "Sports demand", "Scenario read on future sports viewing, participation, event demand, and local fan energy.", [["Sports", scoreText(sports) + " Modeled"], ["Digital", scoreText(digital) + " Modeled"]]),
+    futureWidget("future-youth-sports", Trophy, "Youth Sports 2040", scoreText(youthSports), "Youth activity", "Estimates future youth sports, camps, clinics, and family weekend activity potential.", [["Family", scoreText(family) + " Modeled"], ["Mobility", scoreText(mobility) + " Modeled"]]),
+    futureWidget("future-visitor-layer", MapIconFallback, "Visitor Layer", scoreText(visitor), "Event/visitor pull", "Future-facing estimate of visitor, event, and pass-through demand.", [["Visitor", scoreText(visitor) + " Modeled"], ["Mobility", scoreText(mobility) + " Modeled"]]),
+    futureWidget("future-local-energy", Activity, "Local Energy", scoreText(energy), "Momentum feel", "Blends commerce, resilience, digital readiness, and climate friction into a future local energy score.", [["Energy", scoreText(energy) + " Modeled"], ["Resilience", scoreText(resilience) + " Modeled"]]),
+    futureWidget("future-risk-stack", AlertTriangle, "2040 Risk Stack", band((costPressure + climate + (100 - resilience)) / 3, "Watch closely", "Manageable", "Low"), "Composite risk", "Top future risks compressed into one planning label.", [["Cost", scoreText(costPressure) + " Modeled"], ["Climate", scoreText(climate) + " Modeled"]]),
+    futureWidget("future-opportunity-stack", Lightbulb, "2040 Opportunity", scoreText((localCommerce + sports + digital + housing) / 4), "Composite upside", "Future opportunity blend across commerce, sports, digital readiness, and housing adaptability.", [["Commerce", scoreText(localCommerce) + " Modeled"], ["Sports", scoreText(sports) + " Modeled"]]),
+    futureWidget("future-comparison-readiness", ArrowRightLeft, "Peer Readiness", scoreText(compare), "Compare quality", "Estimates how useful this ZIP will be in future peer matching workflows.", [["Coverage", scoreText(compare) + " Modeled"], ["Report", scoreText(report) + " Modeled"]]),
+    futureWidget("future-investor-brief", ClipboardList, "Investor Brief", scoreText(report), "2040 report grade", "One compact score for whether this ZIP deserves a future-facing investor-style summary.", [["Brief grade", scoreText(report) + " Modeled"], ["Market", scoreText(score) + " Modeled"]]),
   ];
 }
 

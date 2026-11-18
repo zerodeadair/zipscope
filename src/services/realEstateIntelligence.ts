@@ -436,7 +436,7 @@ function buildAiObservation(
   const ownerOccupiedShare = percentOf(properties, (property) => property.ownerOccupied);
   const llcShare = percentOf(properties, (property) => property.entityType === "LLC");
   const institutionalShare = percentOf(properties, (property) => property.institutionalOwner);
-  return `Median home value for ZIP ${profile.zip} is ${currency(profile.medianHomeValue)}. Of the 25 homes nearest the median, ${ownerOccupiedShare}% are owner occupied, ${llcShare}% are LLC-owned, and ${institutionalShare}% are held by known institutional investors. Average annual property taxes are ${currency(averageTaxes)}, with an estimated effective tax rate of ${(effectiveTaxRate * 100).toFixed(2)}%. Homes have appreciated ${Math.round(appreciationRate * 100)}% over the modeled ten-year trend.`;
+  return `Median home value for ZIP ${profile.zip} is ${currency(profile.medianHomeValue)}. Among the 25 modeled comparables, owner occupancy is ${ownerOccupiedShare}% modeled, LLC ownership is ${llcShare}% modeled, and institutional ownership is ${institutionalShare}% modeled. Average annual property taxes are ${currency(averageTaxes)} estimated, with an effective rate of ${(effectiveTaxRate * 100).toFixed(2)}% estimated. The modeled ten-year appreciation is ${Math.round(appreciationRate * 100)}%.`;
 }
 
 function buildNeighborhoodInvestmentScore(input: {

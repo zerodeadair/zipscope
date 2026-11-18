@@ -2,6 +2,7 @@ import { Cloud, CloudFog, CloudRain, CloudSun, Cloudy, Loader2, Snowflake, Sun, 
 import { useEffect, useState } from "react";
 import { getWeatherForZip, type WeatherSnapshot } from "../services/weather";
 import type { PlaceLookup } from "../types/demographics";
+import MetricProvenance from "./MetricProvenance";
 
 const REFRESH_MS = 5 * 60 * 1000;
 
@@ -39,6 +40,7 @@ export default function HeaderWeatherTile({ zip, place }: { zip: string; place: 
           <div className="weather-current-top">
             <strong>{weather ? `${weather.temperature}°` : "--°"}</strong>
             <span>{weather?.condition ?? "Syncing"}</span>
+            {weather && <MetricProvenance>{weather.source === "Open-Meteo" ? "Estimated" : "Modeled"}</MetricProvenance>}
           </div>
         </div>
       </div>
@@ -47,8 +49,9 @@ export default function HeaderWeatherTile({ zip, place }: { zip: string; place: 
           <div className="weather-day" key={day.date}>
             <span>{formatDay(day.date)}</span>
             <WeatherIcon code={day.code} size={17} />
-            <b>{day.high}°</b>
-            <small>{day.low}°</small>
+            <b>{weather ? `${day.high}°` : "—"}</b>
+            <small>{weather ? `${day.low}°` : "—"}</small>
+            {weather && <MetricProvenance>{weather.source === "Open-Meteo" ? "Estimated" : "Modeled"}</MetricProvenance>}
           </div>
         ))}
       </div>

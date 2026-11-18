@@ -1,3 +1,4 @@
+import MetricProvenance from "./MetricProvenance";
 import { useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import { Building2, ChevronLeft, ChevronRight, CircleDollarSign, Clock3, Home, Landmark, LineChart, Loader2, PieChart as PieChartIcon, ShieldAlert, UserRoundCheck } from "lucide-react";
@@ -94,7 +95,7 @@ export default function RealEstateIntelligencePanel({ profile }: { profile: Demo
         </div>
         <GaugeCard
           label="Median Value Percentile"
-          value={intelligence.medianHomeValuePercentile ?? 0}
+          value={intelligence.medianHomeValuePercentile}
           detail={`Compared with ${intelligence.surroundingZips.length} surrounding ZIP value estimates`}
         />
         <GaugeCard
@@ -105,17 +106,18 @@ export default function RealEstateIntelligencePanel({ profile }: { profile: Demo
         <GaugeCard
           label="Private Equity Concentration"
           value={intelligence.privateEquityOwnershipPercent}
-          detail={`${intelligence.institutionalOwnershipPercent}% institutional ownership among median comps`}
+          detail={`${intelligence.institutionalOwnershipPercent}% modeled institutional ownership among median comps`}
         />
         <GaugeCard
           label="Owner Occupancy"
-          value={Math.round((profile.ownerOccupiedRate ?? 0) * 100)}
+          value={profile.ownerOccupiedRate === null ? null : Math.round(profile.ownerOccupiedRate * 100)}
+          modeled={false}
           detail={`${formatOptionalPercent(profile.ownerOccupiedRate)} ACS owner-occupied share`}
         />
       </div>
 
       <div className="real-estate-chart-grid">
-        <ChartFrame icon={LineChart} title="Appreciation Trend">
+        <ChartFrame icon={LineChart} title="Modeled Appreciation Trend">
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart data={intelligence.historicalTrends}>
               <defs>
@@ -127,41 +129,41 @@ export default function RealEstateIntelligencePanel({ profile }: { profile: Demo
               <CartesianGrid stroke="rgba(126,170,192,0.2)" vertical={false} />
               <XAxis dataKey="year" tick={{ fill: "#6f8798", fontSize: 11 }} axisLine={false} tickLine={false} />
               <YAxis tickFormatter={(value) => `$${Math.round(Number(value) / 1000)}k`} tick={{ fill: "#6f8798", fontSize: 11 }} axisLine={false} tickLine={false} width={54} />
-              <Tooltip formatter={(value) => formatCurrency(Number(value))} contentStyle={tooltipStyle} />
+              <Tooltip formatter={(value) => formatCurrency(Number(value)) + " Modeled"} contentStyle={tooltipStyle} />
               <Area type="monotone" dataKey="value" stroke="#2f9fbd" strokeWidth={2} fill="url(#homeValueTrend)" />
             </AreaChart>
           </ResponsiveContainer>
         </ChartFrame>
-        <ChartFrame icon={PieChartIcon} title="Ownership Distribution">
+        <ChartFrame icon={PieChartIcon} title="Modeled Ownership Distribution">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               <Pie data={intelligence.ownershipDistribution.filter((entry) => !["Institutional", "Known PE"].includes(entry.label))} dataKey="count" nameKey="label" innerRadius={42} outerRadius={76} paddingAngle={2}>
                 {intelligence.ownershipDistribution.map((_, index) => <Cell key={index} fill={chartColors[index % chartColors.length]} />)}
               </Pie>
-              <Tooltip formatter={(value, name) => [`${value} properties`, name]} contentStyle={tooltipStyle} />
+              <Tooltip formatter={(value, name) => [`${value} modeled properties`, name]} contentStyle={tooltipStyle} />
             </PieChart>
           </ResponsiveContainer>
         </ChartFrame>
-        <ChartFrame icon={Landmark} title="Property Tax Heat Map">
+        <ChartFrame icon={Landmark} title="Modeled Property Tax Heat Map">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={intelligence.taxHeatMap}>
               <CartesianGrid stroke="rgba(126,170,192,0.18)" vertical={false} />
               <XAxis dataKey="label" tick={{ fill: "#6f8798", fontSize: 10 }} axisLine={false} tickLine={false} interval={0} />
               <YAxis tickFormatter={(value) => `$${Math.round(Number(value) / 1000)}k`} tick={{ fill: "#6f8798", fontSize: 11 }} axisLine={false} tickLine={false} width={46} />
-              <Tooltip formatter={(value) => formatCurrency(Number(value))} contentStyle={tooltipStyle} />
+              <Tooltip formatter={(value) => formatCurrency(Number(value)) + " Modeled"} contentStyle={tooltipStyle} />
               <Bar dataKey="taxBurden" radius={[4, 4, 0, 0]}>
                 {intelligence.taxHeatMap.map((_, index) => <Cell key={index} fill={chartColors[index % chartColors.length]} />)}
               </Bar>
             </BarChart>
           </ResponsiveContainer>
         </ChartFrame>
-        <ChartFrame icon={ShieldAlert} title="Institutional Ownership Ranking">
+        <ChartFrame icon={ShieldAlert} title="Modeled Institutional Ownership Ranking">
           <div className="institutional-ranking">
             {intelligence.comparableProperties.filter((property) => property.institutionalOwner).slice(0, 6).map((property, index) => (
               <div key={property.id}>
                 <span>{index + 1}</span>
                 <strong>{property.institutionalBrand ?? property.ownerName}</strong>
-                <em>{formatCurrency(property.estimatedMarketValue)}</em>
+                <em>{formatCurrency(property.estimatedMarketValue)} Modeled</em>
               </div>
             ))}
             {!intelligence.comparableProperties.some((property) => property.institutionalOwner) && <p>No known institutional owners in the top 25 modeled comparables.</p>}
@@ -200,9 +202,9 @@ export default function RealEstateIntelligencePanel({ profile }: { profile: Demo
 
         {publicRecords.result?.records.length ? (
           <div className="property-table-wrap">
-            <table className="property-table">
-              <thead>
-                <tr>
+            <table role="table" className="property-table">
+              <thead role="rowgroup">
+                <tr role="row">
                   <th>Verified Property</th>
                   <th>Value / Assessment</th>
                   <th>Physical</th>
@@ -210,7 +212,7 @@ export default function RealEstateIntelligencePanel({ profile }: { profile: Demo
                   <th>Records</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody role="rowgroup">
                 {publicRecords.result.records.map((record) => (
                   <PublicPropertyRows
                     key={record.id}
@@ -243,9 +245,9 @@ export default function RealEstateIntelligencePanel({ profile }: { profile: Demo
           </div>
         </div>
         <div className="property-table-wrap">
-          <table className="property-table">
-            <thead>
-              <tr>
+          <table role="table" className="property-table">
+            <thead role="rowgroup">
+              <tr role="row">
                 <th>Modeled Property</th>
                 <th>Value / Tax</th>
                 <th>Physical</th>
@@ -253,7 +255,7 @@ export default function RealEstateIntelligencePanel({ profile }: { profile: Demo
                 <th>History</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody role="rowgroup">
               {visibleProperties.map((property) => {
                 const history = histories[property.id];
                 const isExpanded = expandedPropertyId === property.id;
@@ -301,25 +303,25 @@ function PublicPropertyRows({
 }) {
   return (
     <>
-      <tr>
-        <td>
+      <tr role="row">
+        <td role="cell" data-label="Verified Property">
           <a className="verified-property-link" href={record.sourceUrl} target="_blank" rel="noreferrer">
             {record.streetAddress}
           </a>
           <span>Folio {record.folio}</span>
           <span>PIN {record.pin}</span>
         </td>
-        <td>
+        <td role="cell" data-label="Value / Assessment">
           <strong>{formatCurrency(record.marketValue)}</strong>
           <span>Assessed {formatCurrency(record.assessedValue)}</span>
           <span>Taxable {formatCurrency(record.taxableValue)}</span>
         </td>
-        <td>
+        <td role="cell" data-label="Physical">
           <strong>{record.squareFeet ? `${formatNumber(record.squareFeet)} sf heated` : "Area unavailable"}</strong>
           <span>{record.bedrooms || "-"} bd / {record.bathrooms || "-"} ba</span>
           <span>{record.yearBuilt ? `Built ${record.yearBuilt}` : "Year built unavailable"}</span>
         </td>
-        <td>
+        <td role="cell" data-label="Ownership">
           <strong>{record.ownerName}</strong>
           <span>{record.ownerMailingAddress}</span>
           <div className="owner-badge-row">
@@ -329,7 +331,7 @@ function PublicPropertyRows({
             {record.ownerOccupied && <em className="owner-occupied-badge">Homestead</em>}
           </div>
         </td>
-        <td>
+        <td role="cell" data-label="Records">
           <div className="record-link-stack">
             <button className="history-button" type="button" onClick={onToggleHistory}>
               <Clock3 size={15} />
@@ -341,8 +343,8 @@ function PublicPropertyRows({
         </td>
       </tr>
       {isExpanded && (
-        <tr className="transaction-row">
-          <td colSpan={5}>
+        <tr role="row" className="transaction-row">
+          <td role="cell" colSpan={5}>
             <TaxRecordContinuation record={record} />
             {record.transactions.length ? (
               <TransactionTimeline transactions={record.transactions} verified />
@@ -410,22 +412,22 @@ function PropertyRows({
 }) {
   return (
     <>
-      <tr>
-        <td>
+      <tr role="row">
+        <td role="cell" data-label="Modeled Property">
           <strong>{property.streetAddress}</strong>
-          <span>Built {property.yearBuilt}</span>
+          <span>Built {property.yearBuilt}<MetricProvenance /></span>
         </td>
-        <td>
-          <strong>{formatCurrency(property.estimatedMarketValue)}</strong>
-          <span>Assessed {formatCurrency(property.assessedValue)}</span>
-          <span>{formatCurrency(property.annualPropertyTaxes)} taxes / ${property.taxPerSquareFoot.toFixed(2)} psf</span>
+        <td role="cell" data-label="Value / Tax">
+          <strong>{formatCurrency(property.estimatedMarketValue)}<MetricProvenance>Estimated</MetricProvenance></strong>
+          <span>Assessed {formatCurrency(property.assessedValue)}<MetricProvenance /></span>
+          <span>{formatCurrency(property.annualPropertyTaxes)} taxes / ${property.taxPerSquareFoot.toFixed(2)} psf<MetricProvenance /></span>
         </td>
-        <td>
-          <strong>{formatNumber(property.squareFeet)} sf</strong>
-          <span>{property.bedrooms} bd / {property.bathrooms} ba</span>
-          <span>{formatNumber(property.lotSizeSqFt)} sf lot</span>
+        <td role="cell" data-label="Physical">
+          <strong>{formatNumber(property.squareFeet)} sf<MetricProvenance /></strong>
+          <span>{property.bedrooms} bd / {property.bathrooms} ba<MetricProvenance /></span>
+          <span>{formatNumber(property.lotSizeSqFt)} sf lot<MetricProvenance /></span>
         </td>
-        <td>
+        <td role="cell" data-label="Ownership">
           <strong>{property.ownerName}</strong>
           <span>{property.ownerMailingAddress}</span>
           <div className="owner-badge-row">
@@ -435,7 +437,7 @@ function PropertyRows({
             {property.ownerOccupied && <em className="owner-occupied-badge">Owner occupied</em>}
           </div>
         </td>
-        <td>
+        <td role="cell" data-label="History">
           <button className="history-button" type="button" onClick={onToggleHistory}>
             {history?.loading ? <Loader2 size={15} className="spin-icon" /> : <Clock3 size={15} />}
             {isExpanded ? "Hide modeled timeline" : "Modeled timeline"}
@@ -443,8 +445,8 @@ function PropertyRows({
         </td>
       </tr>
       {isExpanded && (
-        <tr className="transaction-row">
-          <td colSpan={5}>
+        <tr role="row" className="transaction-row">
+          <td role="cell" colSpan={5}>
             {history?.loading && <div className="transaction-loading">Building modeled transfer timeline...</div>}
             {history?.transactions && <TransactionTimeline transactions={history.transactions} />}
           </td>
@@ -460,15 +462,15 @@ function TransactionTimeline({ transactions, verified = false }: { transactions:
       {transactions.map((transaction) => (
         <article key={transaction.id}>
           <div>
-            <strong>{new Date(transaction.saleDate).getFullYear()} - {verified ? "Recorded sale" : "Modeled transfer"} for {formatCurrency(transaction.salePrice)}</strong>
+            <strong>{new Date(transaction.saleDate).getFullYear()} - {verified ? "Recorded sale" : "Modeled transfer"} for {formatCurrency(transaction.salePrice)}{!verified && <MetricProvenance />}</strong>
             <span>{verified ? "Buyer source" : "Buyer profile"}: {transaction.buyerName}</span>
             <span>{verified ? "Seller source" : "Seller profile"}: {transaction.sellerName}</span>
           </div>
           <div>
             <em>{verified ? transaction.deedType : `Modeled ${transaction.deedType}`}</em>
-            <span>Transfer {formatCurrency(transaction.transferAmount)}</span>
-            <span>{transaction.appreciationSincePreviousSale === null ? "Prior sale baseline" : `${formatPercent(transaction.appreciationSincePreviousSale)} appreciation`}</span>
-            <span>{transaction.yearsHeld === null ? "Hold period unavailable" : `${transaction.yearsHeld} years held`}</span>
+            <span>Transfer {formatCurrency(transaction.transferAmount)}{!verified && <MetricProvenance />}</span>
+            <span>{transaction.appreciationSincePreviousSale === null ? "Prior sale baseline" : `${formatPercent(transaction.appreciationSincePreviousSale)} appreciation`}{!verified && transaction.appreciationSincePreviousSale !== null && <MetricProvenance />}</span>
+            <span>{transaction.yearsHeld === null ? "Hold period unavailable" : `${transaction.yearsHeld} years held`}{!verified && transaction.yearsHeld !== null && <MetricProvenance />}</span>
             {"documentNumber" in transaction && transaction.documentNumber && <span>Instrument {transaction.documentNumber}</span>}
             {"qualified" in transaction && transaction.qualified && <span>{transaction.qualified}</span>}
             {"vacantOrImproved" in transaction && transaction.vacantOrImproved && <span>{transaction.vacantOrImproved}</span>}
@@ -479,14 +481,15 @@ function TransactionTimeline({ transactions, verified = false }: { transactions:
   );
 }
 
-function GaugeCard({ label, value, detail }: { label: string; value: number; detail: string }) {
-  const safeValue = Math.max(0, Math.min(100, value));
+function GaugeCard({ label, value, detail, modeled = true }: { label: string; value: number | null; detail: string; modeled?: boolean }) {
+  const safeValue = Math.max(0, Math.min(100, value ?? 0));
   return (
     <article className="real-estate-gauge">
       <div className="gauge-ring" style={{ background: `conic-gradient(#2f9fbd 0 ${safeValue}%, rgba(126,170,192,0.16) ${safeValue}% 100%)` }}>
-        <span>{safeValue}</span>
+        <span>{value === null ? "—" : safeValue}</span>
       </div>
       <strong>{label}</strong>
+      {modeled && value !== null && <MetricProvenance />}
       <p>{detail}</p>
     </article>
   );
@@ -497,7 +500,7 @@ function MetricPill({ icon: Icon, label, value }: { icon: LucideIcon; label: str
     <div>
       <Icon size={16} />
       <span>{label}</span>
-      <strong>{value}</strong>
+      <strong>{value}{value !== "-" && value !== "Unavailable" && <MetricProvenance>Estimated</MetricProvenance>}</strong>
     </div>
   );
 }
@@ -509,7 +512,7 @@ function OwnershipMetric({ label, value }: { label: string; value: number }) {
         <UserRoundCheck size={16} />
         <span>{label}</span>
       </div>
-      <strong>{value}%</strong>
+      <strong>{value}%<MetricProvenance /></strong>
       <i><b style={{ width: `${Math.max(4, Math.min(100, value))}%` }} /></i>
     </article>
   );

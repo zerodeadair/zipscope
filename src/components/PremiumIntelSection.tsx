@@ -1,3 +1,4 @@
+import MetricProvenance from "./MetricProvenance";
 import { BriefcaseBusiness, CarFront, ChartNoAxesCombined, HeartHandshake, Home, Scale } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import type { DemographicProfile } from "../types/demographics";
@@ -33,7 +34,7 @@ export default function PremiumIntelSection({ profile }: { profile: DemographicP
                 <Icon size={18} />
                 <span>{signal.label}</span>
               </div>
-              <strong>{signal.value}</strong>
+              <strong>{signal.value}<MetricProvenance /></strong>
               <p>{signal.detail}</p>
               <div className="premium-intel-meter">
                 <i style={{ width: `${Math.max(6, Math.min(100, signal.score))}%` }} />

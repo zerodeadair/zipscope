@@ -1,3 +1,4 @@
+import MetricProvenance from "./MetricProvenance";
 import { Activity, ShieldAlert, TrendingUp, Trophy } from "lucide-react";
 import type { OddsQuote } from "../providers/oddsProvider";
 import type { SportsEvent } from "../providers/sportsEventsProvider";
@@ -13,19 +14,19 @@ export default function SportsContextPanel({ events, odds }: { events: SportsEve
     <div className="sports-context-grid">
       <article className="context-card">
         <div><Trophy size={17} /> Nearby Team Performance</div>
-        <strong>{events.length} tracked events</strong>
+        <strong>{events.length} tracked events<MetricProvenance>Beta</MetricProvenance></strong>
         <p>Regional event slate is modeled from public/demo sports adapters until live provider keys are added.</p>
         <div className="mini-bars"><span /><span /><span /><span /></div>
       </article>
       <article className="context-card">
         <div><TrendingUp size={17} /> Odds Market Pulse</div>
-        <strong>{averageHomeProbability ? `${(averageHomeProbability * 100).toFixed(1)}%` : "Pending"}</strong>
+        <strong>{averageHomeProbability ? `${(averageHomeProbability * 100).toFixed(1)}%` : "Pending"}{averageHomeProbability > 0 && <MetricProvenance>Beta</MetricProvenance>}</strong>
         <p>Average home implied probability across visible moneyline markets. Informational analysis only.</p>
         <div className="sparkline" />
       </article>
       <article className="context-card">
         <div><Activity size={17} /> Market Sentiment</div>
-        <strong>{odds.length} public odds quotes</strong>
+        <strong>{odds.length} odds quotes<MetricProvenance>Beta</MetricProvenance></strong>
         <p>Provider comparison stays descriptive. ZipScope does not recommend bets.</p>
         <div className="donut-signal" />
       </article>

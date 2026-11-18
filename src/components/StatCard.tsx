@@ -42,10 +42,12 @@ export default function StatCard({
     >
       <div className="stat-card-topline">
         <div className="stat-icon"><Icon size={20} /></div>
-        {status && <em className={`stat-status ${status.toLowerCase().replace(/\s+/g, "-")}`}>{status}</em>}
       </div>
       <span>{label}</span>
-      <strong>{value}</strong>
+      <div className="stat-card-value">
+        <strong>{value}</strong>
+        {status && <em className={"stat-status " + status.toLowerCase().replace(/\s+/g, "-")}>{status}</em>}
+      </div>
       <small>{detail}</small>
       <div className="stat-card-meta" aria-label="Tile metadata">
         {category && <b>{category}</b>}
@@ -53,7 +55,7 @@ export default function StatCard({
         {trend && <b>{trend}</b>}
       </div>
       {typeof percentile === "number" && (
-        <div className="stat-meter" aria-label={`${label} percentile ${percentile}`}>
+        <div className="stat-meter" aria-label={`${label} modeled percentile ${percentile}`}>
           <i style={{ width: `${Math.max(4, Math.min(100, percentile))}%` }} />
         </div>
       )}

@@ -1,3 +1,4 @@
+import MetricProvenance from "./MetricProvenance";
 import { forwardRef, useEffect, useMemo, useRef, useState } from "react";
 import { Baby, Banknote, BriefcaseBusiness, Building2, Car, ChevronDown, ChevronUp, Clock3, CloudSun, Gauge, GraduationCap, HeartPulse, Home, Info, Languages, Laptop, MapPinned, Navigation, Pin, Radar, Rocket, Scale, School, Search, ShieldAlert, Smartphone, Sparkles, Store, Timer, Train, Trophy, Umbrella, UserRound, Users, UsersRound, Vote, Wifi } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
@@ -243,7 +244,7 @@ const TileInsightPanel = forwardRef<HTMLElement, { tile: DemographicTile; profil
           <h3>{tile.insightTitle}</h3>
         </div>
       </div>
-      <div className="tile-insight-selected">Selected tile: {tile.label} / {tile.value}</div>
+      <div className="tile-insight-selected">Selected tile: {tile.label} / {tile.value}{tile.status && tile.status !== "Real data" && <MetricProvenance>{tile.status}</MetricProvenance>}</div>
       <p>{tile.insight}</p>
       <small>
         Read as ZIP {profile.zip} / Census ZCTA {profile.zcta}. Demographic estimates describe local context; modeled values are signals, not official determinations.
@@ -283,7 +284,7 @@ function IntelligenceQuestionStrip({ questions }: { questions: IntelligenceQuest
               <Icon size={18} />
               <span>{question.question}</span>
             </div>
-            <strong>{question.answer}</strong>
+            <strong>{question.answer}<MetricProvenance /></strong>
             <p>{question.detail}</p>
             <div className="zip-question-meter" aria-label={`${question.answer} score ${question.score}`}>
               <i style={{ width: `${question.score}%` }} />
@@ -320,11 +321,11 @@ function RegionalScopePanel({ profile, scope }: { profile: DemographicProfile; s
             <span>{row.level}</span>
             <strong>{row.label}</strong>
             <dl>
-              <div><dt>Population</dt><dd>{formatNumber(row.population)}</dd></div>
-              <div><dt>Home Value</dt><dd>{formatOptionalCurrency(row.homeValue)}</dd></div>
-              <div><dt>Income</dt><dd>{formatOptionalCurrency(row.income)}</dd></div>
-              <div><dt>Cost</dt><dd>{row.costOfLiving}/100</dd></div>
-              <div><dt>Growth</dt><dd>{row.growth}/100</dd></div>
+              <div><dt>Population</dt><dd>{formatNumber(row.population)}{row.level !== "ZIP" && <MetricProvenance />}</dd></div>
+              <div><dt>Home Value</dt><dd>{formatOptionalCurrency(row.homeValue)}{row.level !== "ZIP" && row.homeValue !== null && <MetricProvenance />}</dd></div>
+              <div><dt>Income</dt><dd>{formatOptionalCurrency(row.income)}{row.level !== "ZIP" && row.income !== null && <MetricProvenance />}</dd></div>
+              <div><dt>Cost</dt><dd>{row.costOfLiving}/100<MetricProvenance /></dd></div>
+              <div><dt>Growth</dt><dd>{row.growth}/100<MetricProvenance /></dd></div>
             </dl>
             <p>{row.shareLabel}</p>
           </article>

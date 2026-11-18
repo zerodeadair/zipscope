@@ -1,3 +1,4 @@
+import MetricProvenance from "./MetricProvenance";
 import { Building2, Clock3, GraduationCap, Home, Landmark, LineChart, MapPinned, ShieldAlert, TrendingUp, WalletCards } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import type { DemographicProfile } from "../types/demographics";
@@ -30,7 +31,7 @@ export default function AdvancedMarketTiles({ profile }: { profile: DemographicP
                 <Icon size={18} />
                 <span>{tile.label}</span>
               </div>
-              <strong>{tile.value}</strong>
+              <strong>{tile.value}<MetricProvenance /></strong>
               <p>{tile.detail}</p>
               <div className="market-meter">
                 <i style={{ width: `${Math.max(6, Math.min(tile.score, 100))}%` }} />
