@@ -196,7 +196,6 @@ export function buildInfographicRows(profile: DemographicProfile, similarAreas: 
     ],
     similarPreview: similarAreas.map((area) => `${area.zip} ${area.city}, ${area.stateCode} - ${area.matchScore}% Beta match`),
     insight: topInsights[0] ?? "Top insight unavailable.",
-    sourceNote: `${profile.sourceName}; ZIP approximated as Census ZCTA ${profile.zcta}. Last checked ${new Date(profile.lastUpdated).toLocaleDateString()}.`,
   };
 }
 

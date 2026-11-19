@@ -3,7 +3,7 @@ import { forwardRef, useEffect, useMemo, useRef, useState } from "react";
 import { Baby, Banknote, BriefcaseBusiness, Building2, Car, ChevronDown, ChevronUp, Clock3, CloudSun, Gauge, GraduationCap, HeartPulse, Home, Info, Languages, Laptop, MapPinned, Navigation, Pin, Radar, Rocket, Scale, School, Search, ShieldAlert, Smartphone, Sparkles, Store, Timer, Train, Trophy, Umbrella, UserRound, Users, UsersRound, Vote, Wifi } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { DemographicProfile } from "../providers/demographicsProvider";
-import { formatNumber, formatOptionalCurrency, formatOptionalNumber, formatOptionalPercent } from "../utils/formatters";
+import { formatNumber, formatOptionalCurrency, formatOptionalNumber, formatOptionalPercent, formatSourceDate } from "../utils/formatters";
 import StatCard from "./StatCard";
 import DemographicCharts from "./DemographicCharts";
 
@@ -118,7 +118,7 @@ export default function DemographicsDashboard({ onPinChange, pinnedTileIds: cont
         <div className="demographic-heading-pills" aria-label="Profile metadata">
           <span>ZIP {profile.zip}</span>
           <span>ZCTA {profile.zcta}</span>
-          <span>{profile.sourceYear}</span>
+          <span>ACS 5-year · {profile.sourceYear}</span>
         </div>
       </div>
       <div className="map-panel demographic-summary-panel">
@@ -134,9 +134,9 @@ export default function DemographicsDashboard({ onPinChange, pinnedTileIds: cont
           </details>
         </div>
         <div className="source-stack compact-source-stack demographic-source-stack">
-          <div className="source-pill">ACS 2024 / ZCTA {profile.zcta}</div>
+          <div className="source-pill">5-year period ending {profile.sourceYear}</div>
           <div className="caveat" title="ZIP demographics use Census ZCTAs, which approximate USPS ZIP areas."><Info size={14} /> ZCTA caveat</div>
-          <small>{new Date(profile.lastUpdated).toLocaleDateString()}</small>
+          <small>Profile retrieved <time dateTime={profile.lastUpdated}>{formatSourceDate(profile.lastUpdated)}</time></small>
         </div>
       </div>
       <IntelligenceQuestionStrip questions={intelligenceQuestions} />
@@ -1776,17 +1776,11 @@ function clamp(value: number, min = 0, max = 100) {
 }
 
 function RaceCompositionPanel({ raceEthnicity }: { raceEthnicity: Array<{ label: string; value: number }> }) {
-  const measuredGroups = [...raceEthnicity]
+  const groups = [...raceEthnicity]
     .filter((group) => group.value > 0)
     .sort((a, b) => b.value - a.value)
     .slice(0, 6);
-  const measuredTotal = measuredGroups.reduce((sum, group) => sum + group.value, 0);
-  const remainder = Math.max(0, 100 - measuredTotal);
-  const groups = remainder >= 0.1
-    ? [...measuredGroups, { label: "All other / not shown", value: remainder }]
-    : measuredGroups;
-  const topThree = groups.slice(0, 3);
-  const donutSegments = buildDonutSegments(groups);
+  const topGroup = groups[0];
 
   return (
     <section className="race-widget" aria-label="Race and ethnicity composition">
@@ -1795,14 +1789,14 @@ function RaceCompositionPanel({ raceEthnicity }: { raceEthnicity: Array<{ label:
           <span className="mono-label">Race / Ethnicity Widget</span>
           <h3>ACS composition breakdown</h3>
         </div>
-        <small>Percentages are Census ACS ZCTA estimates.</small>
+        <small>ACS categories may overlap. The ring shows the largest reported share.</small>
       </div>
       <div className="race-widget-grid">
         <div className="race-donut-wrap">
-          <div className="race-donut" style={{ background: groups.length ? `conic-gradient(${donutSegments})` : undefined }}>
+          <div className="race-donut" style={{ background: `conic-gradient(${raceColors[0]} 0 ${topGroup?.value ?? 0}%, rgba(14, 116, 144, 0.12) 0)` }}>
             <div>
-              <strong>{topThree[0]?.value.toFixed(0) ?? "--"}%</strong>
-              <span>{topThree[0]?.label ?? "No data"}</span>
+              <strong>{topGroup ? `${topGroup.value.toFixed(1)}%` : "—"}</strong>
+              <span>{topGroup?.label ?? "No data"}</span>
             </div>
           </div>
         </div>
@@ -2094,20 +2088,3 @@ function getTopRaceGroup(raceEthnicity: DemographicProfile["raceEthnicity"]) {
 }
 
 const raceColors = ["#21d4fd", "#a855f7", "#5eead4", "#60a5fa", "#f472b6", "#facc15"];
-
-function buildDonutSegments(groups: Array<{ label: string; value: number }>) {
-  let cursor = 0;
-  const segments = groups.map((group, index) => {
-    const start = cursor;
-    const end = Math.min(100, cursor + group.value);
-    cursor = end;
-    const color = raceColors[index % raceColors.length];
-    return `${color} ${start}% ${end}%`;
-  });
-
-  if (cursor < 100) {
-    segments.push(`rgba(14, 116, 144, 0.12) ${cursor}% 100%`);
-  }
-
-  return segments.join(", ");
-}

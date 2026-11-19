@@ -39,25 +39,30 @@ export default function HeaderWeatherTile({ zip, place }: { zip: string; place: 
         <div>
           <div className="weather-current-top">
             <strong>{weather ? `${weather.temperature}°` : "--°"}</strong>
+            {weather && <MetricProvenance>{weather.temperatureModeled ? "Modeled" : "Estimated"}</MetricProvenance>}
             <span>{weather?.condition ?? "Syncing"}</span>
-            {weather && <MetricProvenance>{weather.source === "Open-Meteo" ? "Estimated" : "Modeled"}</MetricProvenance>}
           </div>
         </div>
       </div>
       <div className="weather-forecast-strip">
         {(weather?.forecast ?? buildLoadingDays()).slice(1, 5).map((day) => (
           <div className="weather-day" key={day.date}>
-            <span>{formatDay(day.date)}</span>
+            <time dateTime={day.date}>{formatDay(day.date)}</time>
             <WeatherIcon code={day.code} size={17} />
             <b>{weather ? `${day.high}°` : "—"}</b>
             <small>{weather ? `${day.low}°` : "—"}</small>
-            {weather && <MetricProvenance>{weather.source === "Open-Meteo" ? "Estimated" : "Modeled"}</MetricProvenance>}
+            {weather && <MetricProvenance>{day.modeled ? "Modeled" : "Estimated"}</MetricProvenance>}
           </div>
         ))}
       </div>
       <div className="weather-meta">
         <span>{weather?.source ?? "Weather provider"}</span>
-        <span>{weather ? `Updated ${formatRefreshTime(weather.lastRefreshed)}` : "Refreshing"}</span>
+        {weather ? (
+          <span>
+            {weather.source === "Open-Meteo" ? "Retrieved " : "Generated "}
+            <time dateTime={weather.lastRefreshed}>{formatRefreshTime(weather.lastRefreshed)}</time>
+          </span>
+        ) : <span>Refreshing</span>}
       </div>
     </aside>
   );
@@ -82,6 +87,7 @@ function buildLoadingDays() {
     low: 0,
     condition: "Loading",
     code: -1,
+    modeled: false,
   }));
 }
 
@@ -91,7 +97,10 @@ function formatDay(date: string) {
 
 function formatRefreshTime(value: string) {
   return new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    day: "numeric",
     hour: "numeric",
     minute: "2-digit",
+    timeZoneName: "short",
   }).format(new Date(value));
 }

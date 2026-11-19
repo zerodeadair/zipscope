@@ -22,6 +22,17 @@ export const formatOptionalNumber = (value: number | null) =>
 export const formatOptionalPercent = (value: number | null) =>
   value === null ? "-" : formatPercent(value);
 
+const sourceDate = new Intl.DateTimeFormat("en-US", {
+  month: "short",
+  day: "numeric",
+  year: "numeric",
+});
+
+export function formatSourceDate(value: string) {
+  const date = new Date(/^\d{4}-\d{2}-\d{2}$/.test(value) ? `${value}T12:00:00` : value);
+  return Number.isNaN(date.getTime()) ? "Date unavailable" : sourceDate.format(date);
+}
+
 export function localMarketScore(profile: DemographicProfile) {
   const populationScore = Math.min(profile.population / 80000, 1) * 25;
   const incomeScore = Math.min((profile.medianHouseholdIncome ?? 0) / 120000, 1) * 35;

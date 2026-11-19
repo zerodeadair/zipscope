@@ -23,7 +23,7 @@ export default function OddsTable({ events, odds }: { events: SportsEvent[]; odd
               <th>Home</th>
               <th>Away</th>
               <th>Implied Home</th>
-              <th>Updated</th>
+              <th>Demo loaded</th>
             </tr>
           </thead>
           <tbody role="rowgroup">
@@ -38,7 +38,7 @@ export default function OddsTable({ events, odds }: { events: SportsEvent[]; odd
                   <td role="cell" data-label="Home">{quote.homeOdds ?? quote.overOdds ?? "-"}{(quote.homeOdds ?? quote.overOdds) !== undefined && <MetricProvenance>Beta</MetricProvenance>}</td>
                   <td role="cell" data-label="Away">{quote.awayOdds ?? quote.underOdds ?? "-"}{(quote.awayOdds ?? quote.underOdds) !== undefined && <MetricProvenance>Beta</MetricProvenance>}</td>
                   <td role="cell" data-label="Implied Home">{quote.homeOdds ? `${(impliedProbability(quote.homeOdds) * 100).toFixed(1)}%` : "-"}{quote.homeOdds !== undefined && <MetricProvenance>Beta</MetricProvenance>}</td>
-                  <td role="cell" data-label="Updated">{new Date(quote.lastUpdated).toLocaleTimeString()}</td>
+                  <td role="cell" data-label="Demo loaded"><time dateTime={quote.lastUpdated}>{new Date(quote.lastUpdated).toLocaleTimeString()}</time></td>
                 </tr>
               );
             })}

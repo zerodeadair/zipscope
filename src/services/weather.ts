@@ -6,12 +6,14 @@ export type WeatherDay = {
   low: number;
   condition: string;
   code: number;
+  modeled: boolean;
 };
 
 export type WeatherSnapshot = {
   zip: string;
   placeLabel: string;
   temperature: number;
+  temperatureModeled: boolean;
   condition: string;
   code: number;
   lastRefreshed: string;
@@ -53,13 +55,16 @@ export async function getWeatherForZip(zip: string, place: PlaceLookup | null): 
     }
     const payload = (await response.json()) as OpenMeteoResponse;
     const currentCode = payload.current?.weather_code ?? payload.daily?.weather_code?.[0] ?? 0;
-    const temperature = payload.current?.temperature_2m ?? averageTemp(payload.daily?.temperature_2m_max?.[0], payload.daily?.temperature_2m_min?.[0]);
+    const high = payload.daily?.temperature_2m_max?.[0];
+    const low = payload.daily?.temperature_2m_min?.[0];
+    const temperature = payload.current?.temperature_2m ?? averageTemp(high, low);
     const forecast = buildForecast(payload);
 
     return {
       zip,
       placeLabel: placeLabel(zip, place),
       temperature: Math.round(temperature),
+      temperatureModeled: payload.current?.temperature_2m == null && high == null && low == null,
       condition: conditionFromCode(currentCode),
       code: currentCode,
       lastRefreshed: new Date().toISOString(),
@@ -85,6 +90,7 @@ function buildForecast(payload: OpenMeteoResponse): WeatherDay[] {
       low: Math.round(lows[index] ?? 54),
       condition: conditionFromCode(code),
       code,
+      modeled: highs[index] == null || lows[index] == null,
     };
   });
 }
@@ -102,6 +108,7 @@ function buildDemoWeather(zip: string, place: PlaceLookup | null, source: Weathe
       low: high - 13 - (index % 3),
       condition: conditionFromCode(code),
       code,
+      modeled: true,
     };
   });
 
@@ -109,6 +116,7 @@ function buildDemoWeather(zip: string, place: PlaceLookup | null, source: Weathe
     zip,
     placeLabel: placeLabel(zip, place),
     temperature: forecast[0].high - 4,
+    temperatureModeled: true,
     condition: forecast[0].condition,
     code: forecast[0].code,
     lastRefreshed: new Date().toISOString(),

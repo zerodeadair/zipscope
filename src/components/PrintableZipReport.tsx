@@ -3,7 +3,7 @@ import type { OddsQuote } from "../providers/oddsProvider";
 import type { SportsEvent } from "../providers/sportsEventsProvider";
 import type { DemographicProfile } from "../types/demographics";
 import { buildPremiumSignals, buildSimilarAreas, buildSourceConfidence, buildTopInsights } from "../utils/demographicIntelligence";
-import { formatNumber, formatOptionalCurrency, formatOptionalPercent, localMarketScore } from "../utils/formatters";
+import { formatNumber, formatOptionalCurrency, formatOptionalPercent, formatSourceDate, localMarketScore } from "../utils/formatters";
 import { buildDemographicTiles } from "./DemographicsDashboard";
 
 type Props = {
@@ -39,7 +39,7 @@ export default function PrintableZipReport({ events, odds, pinnedTileIds, profil
     ["Housing units", profile.housingUnits === null ? "Unavailable" : formatNumber(profile.housingUnits)],
     ["Owner occupied", formatOptionalPercent(profile.ownerOccupiedRate)],
     ["Vacancy", formatOptionalPercent(profile.vacancyRate)],
-    ["Source year", profile.sourceYear],
+    ["ACS 5-year period ending", profile.sourceYear],
   ];
 
   return (
@@ -52,12 +52,12 @@ export default function PrintableZipReport({ events, odds, pinnedTileIds, profil
           <div className="export-chip-row">
             <span>{profile.sourceName}</span>
             <span>ZCTA {profile.zcta}</span>
-            <span>{new Date(profile.lastUpdated).toLocaleDateString()}</span>
+            <span>Retrieved <time dateTime={profile.lastUpdated}>{formatSourceDate(profile.lastUpdated)}</time></span>
           </div>
         </div>
         <div className="export-score-card">
           <span>Market signal</span>
-          <strong>{score}</strong>
+          <strong>{score}<MetricProvenance /></strong>
           <p>{confidence.score}% source coverage</p>
           <i><b style={{ width: `${confidence.score}%` }} /></i>
         </div>
@@ -98,9 +98,9 @@ export default function PrintableZipReport({ events, odds, pinnedTileIds, profil
             <article key={tile.id}>
               <div>
                 <span>{tile.category}</span>
-                <em>{tile.status}</em>
+                {tile.status === "Real data" && <em>{tile.status}</em>}
               </div>
-              <strong>{tile.value}</strong>
+              <strong>{tile.value}{tile.status && tile.status !== "Real data" && <MetricProvenance>{tile.status}</MetricProvenance>}</strong>
               <h3>{tile.label}</h3>
               <p>{tile.detail}</p>
               <small>{tile.confidence}</small>
@@ -190,8 +190,8 @@ export default function PrintableZipReport({ events, odds, pinnedTileIds, profil
       </section>
 
       <footer className="print-report-footer export-report-footer">
-        <span>{profile.sourceName}; ZIP approximated as Census ZCTA {profile.zcta}. Last checked {new Date(profile.lastUpdated).toLocaleDateString()}.</span>
-        <span>Estimated, beta, mock, and coming-soon values are directional planning signals, not official determinations.</span>
+        <span>{profile.sourceName}. ZIP approximated as Census ZCTA {profile.zcta}. Profile retrieved <time dateTime={profile.lastUpdated}>{formatSourceDate(profile.lastUpdated)}</time>.</span>
+        <span>Modeled, estimated, and beta values are for planning.</span>
       </footer>
     </section>
   );

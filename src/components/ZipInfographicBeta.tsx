@@ -1,6 +1,7 @@
 import { Download, FileImage, Printer } from "lucide-react";
 import type { DemographicProfile } from "../types/demographics";
 import { buildInfographicRows, buildSimilarAreas, buildSourceConfidence, buildTopInsights } from "../utils/demographicIntelligence";
+import { formatSourceDate } from "../utils/formatters";
 
 type Props = {
   isExportingImage?: boolean;
@@ -16,7 +17,7 @@ export default function ZipInfographicBeta({ isExportingImage = false, onExportR
   const insights = buildTopInsights(profile).slice(0, 3);
 
   function handleDownload() {
-    const svg = buildInfographicSvg(profile, rows.facts, rows.similarPreview, insights, rows.sourceNote, confidence.score);
+    const svg = buildInfographicSvg(profile, rows.facts, rows.similarPreview, insights, confidence.score);
     const image = new Image();
     const url = URL.createObjectURL(new Blob([svg], { type: "image/svg+xml;charset=utf-8" }));
 
@@ -91,8 +92,9 @@ export default function ZipInfographicBeta({ isExportingImage = false, onExportR
             {rows.similarPreview.map((item) => <p key={item}>{item}</p>)}
           </div>
           <div>
-            <h4>Data freshness / source note</h4>
-            <p>{rows.sourceNote}</p>
+            <h4>Source and retrieval date</h4>
+            <p>{profile.sourceName} · ZCTA {profile.zcta}</p>
+            <p>Profile retrieved <time dateTime={profile.lastUpdated}>{formatSourceDate(profile.lastUpdated)}</time>.</p>
             <p>{confidence.label}: {confidence.score}% field coverage.</p>
           </div>
         </div>
@@ -106,7 +108,6 @@ function buildInfographicSvg(
   facts: string[][],
   similar: string[],
   insights: string[],
-  sourceNote: string,
   confidence: number,
 ) {
   const escape = (value: string) => value.replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[char] ?? char));
@@ -148,9 +149,10 @@ function buildInfographicSvg(
   <rect x="80" y="1272" width="1240" height="230" rx="22" fill="#f7f2ff" stroke="#ddd6fe"/>
   <text x="108" y="1316" fill="#6d28d9" font-size="26" font-weight="950">Similar Areas Beta Preview</text>
   ${similarLines}
-  <rect x="80" y="1536" width="1240" height="116" rx="22" fill="#ffffff" stroke="#c7e9f6"/>
-  <text x="108" y="1582" fill="#2f86a7" font-size="24" font-weight="760">Data Freshness / Source Note</text>
-  <text x="108" y="1624" fill="#526681" font-size="23" font-weight="760">${escape(sourceNote.slice(0, 112))}</text>
-  <text x="100" y="1698" fill="#7890a8" font-size="22" font-weight="760">Beta overlays are directional planning signals. Unavailable fields are left unavailable rather than replaced with exact fabricated values.</text>
+  <rect x="80" y="1536" width="1240" height="132" rx="22" fill="#ffffff" stroke="#c7e9f6"/>
+  <text x="108" y="1574" fill="#2f86a7" font-size="24" font-weight="760">Source and retrieval date</text>
+  <text x="108" y="1608" fill="#526681" font-size="23" font-weight="760">${escape(profile.sourceName)} · ZCTA ${escape(profile.zcta)}</text>
+  <text x="108" y="1640" fill="#526681" font-size="23" font-weight="760">Profile retrieved ${escape(formatSourceDate(profile.lastUpdated))}</text>
+  <text x="100" y="1710" fill="#526681" font-size="22" font-weight="760">Modeled and beta values are for planning.</text>
 </svg>`;
 }

@@ -5,7 +5,7 @@ import { Building2, ChevronLeft, ChevronRight, CircleDollarSign, Clock3, Home, L
 import type { LucideIcon } from "lucide-react";
 import { Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import type { DemographicProfile } from "../types/demographics";
-import { formatCurrency, formatNumber, formatOptionalCurrency, formatOptionalPercent, formatPercent } from "../utils/formatters";
+import { formatCurrency, formatNumber, formatOptionalCurrency, formatOptionalPercent, formatPercent, formatSourceDate } from "../utils/formatters";
 import { ComparableProperty, PropertyTransaction, fetchPropertyTransactions, getRealEstateIntelligence } from "../services/realEstateIntelligence";
 import { PublicPropertyRecord, PublicPropertyRecordsResult, fetchPublicPropertyRecords } from "../services/publicPropertyRecords";
 
@@ -117,7 +117,7 @@ export default function RealEstateIntelligencePanel({ profile }: { profile: Demo
       </div>
 
       <div className="real-estate-chart-grid">
-        <ChartFrame icon={LineChart} title="Modeled Appreciation Trend">
+        <ChartFrame icon={LineChart} title="Appreciation trend">
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart data={intelligence.historicalTrends}>
               <defs>
@@ -134,7 +134,7 @@ export default function RealEstateIntelligencePanel({ profile }: { profile: Demo
             </AreaChart>
           </ResponsiveContainer>
         </ChartFrame>
-        <ChartFrame icon={PieChartIcon} title="Modeled Ownership Distribution">
+        <ChartFrame icon={PieChartIcon} title="Ownership distribution">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               <Pie data={intelligence.ownershipDistribution.filter((entry) => !["Institutional", "Known PE"].includes(entry.label))} dataKey="count" nameKey="label" innerRadius={42} outerRadius={76} paddingAngle={2}>
@@ -144,7 +144,7 @@ export default function RealEstateIntelligencePanel({ profile }: { profile: Demo
             </PieChart>
           </ResponsiveContainer>
         </ChartFrame>
-        <ChartFrame icon={Landmark} title="Modeled Property Tax Heat Map">
+        <ChartFrame icon={Landmark} title="Property tax heat map">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={intelligence.taxHeatMap}>
               <CartesianGrid stroke="rgba(126,170,192,0.18)" vertical={false} />
@@ -157,7 +157,7 @@ export default function RealEstateIntelligencePanel({ profile }: { profile: Demo
             </BarChart>
           </ResponsiveContainer>
         </ChartFrame>
-        <ChartFrame icon={ShieldAlert} title="Modeled Institutional Ownership Ranking">
+        <ChartFrame icon={ShieldAlert} title="Institutional ownership ranking">
           <div className="institutional-ranking">
             {intelligence.comparableProperties.filter((property) => property.institutionalOwner).slice(0, 6).map((property, index) => (
               <div key={property.id}>
@@ -362,7 +362,7 @@ function TaxRecordContinuation({ record }: { record: PublicPropertyRecord }) {
   const effectiveAssessmentRatio = record.marketValue > 0 ? record.assessedValue / record.marketValue : null;
   const taxableRatio = record.marketValue > 0 ? record.taxableValue / record.marketValue : null;
   const taxableDiscount = record.marketValue > record.taxableValue ? record.marketValue - record.taxableValue : null;
-  const latestSale = record.transactions[0];
+  const saleDate = record.saleDate ?? record.transactions[0]?.saleDate;
 
   return (
     <section className="verified-tax-continuation" aria-label={`Tax record continuation for ${record.streetAddress}`}>
@@ -383,7 +383,7 @@ function TaxRecordContinuation({ record }: { record: PublicPropertyRecord }) {
         <TaxMetric label="Taxable value" value={formatCurrency(record.taxableValue)} detail={taxableRatio === null ? "Taxable ratio unavailable" : `${formatPercent(taxableRatio)} of market value`} />
         <TaxMetric label="Exemption / cap gap" value={taxableDiscount === null ? "-" : formatCurrency(taxableDiscount)} detail={record.ownerOccupied ? "Homestead flagged on public record" : "No homestead flag on returned row"} />
         <TaxMetric label="Folio" value={record.folio} detail={`PIN ${record.pin}`} />
-        <TaxMetric label="Latest sale" value={record.salePrice ? formatCurrency(record.salePrice) : "-"} detail={record.saleDate ? new Date(record.saleDate).toLocaleDateString() : latestSale?.saleDate ? new Date(latestSale.saleDate).toLocaleDateString() : "Sale date unavailable"} />
+        <TaxMetric label="Latest sale" value={record.salePrice ? formatCurrency(record.salePrice) : "-"} detail={saleDate ? formatSourceDate(saleDate) : "Sale date unavailable"} />
       </div>
     </section>
   );
@@ -462,7 +462,7 @@ function TransactionTimeline({ transactions, verified = false }: { transactions:
       {transactions.map((transaction) => (
         <article key={transaction.id}>
           <div>
-            <strong>{new Date(transaction.saleDate).getFullYear()} - {verified ? "Recorded sale" : "Modeled transfer"} for {formatCurrency(transaction.salePrice)}{!verified && <MetricProvenance />}</strong>
+            <strong><time dateTime={transaction.saleDate}>{formatSourceDate(transaction.saleDate)}</time> · {verified ? "Recorded sale" : "Modeled transfer"} for {formatCurrency(transaction.salePrice)}{!verified && <MetricProvenance />}</strong>
             <span>{verified ? "Buyer source" : "Buyer profile"}: {transaction.buyerName}</span>
             <span>{verified ? "Seller source" : "Seller profile"}: {transaction.sellerName}</span>
           </div>
@@ -488,8 +488,8 @@ function GaugeCard({ label, value, detail, modeled = true }: { label: string; va
       <div className="gauge-ring" style={{ background: `conic-gradient(#2f9fbd 0 ${safeValue}%, rgba(126,170,192,0.16) ${safeValue}% 100%)` }}>
         <span>{value === null ? "—" : safeValue}</span>
       </div>
-      <strong>{label}</strong>
       {modeled && value !== null && <MetricProvenance />}
+      <strong>{label}</strong>
       <p>{detail}</p>
     </article>
   );
@@ -524,6 +524,7 @@ function ChartFrame({ icon: Icon, title, children }: { icon: LucideIcon; title: 
       <div>
         <Icon size={17} />
         <h3>{title}</h3>
+        <MetricProvenance />
       </div>
       <div className="real-estate-chart-box">{children}</div>
     </article>

@@ -4,7 +4,7 @@ import type { LucideIcon } from "lucide-react";
 import type { ReactNode } from "react";
 import { useMemo, useState } from "react";
 import { DemographicProfile } from "../providers/demographicsProvider";
-import { formatNumber, formatOptionalCurrency, formatOptionalPercent, localMarketScore } from "../utils/formatters";
+import { formatNumber, formatOptionalCurrency, formatOptionalPercent, formatSourceDate, localMarketScore } from "../utils/formatters";
 import { buildPremiumSignals, buildSimilarAreas, buildSourceConfidence, buildTopInsights } from "../utils/demographicIntelligence";
 
 type Props = {
@@ -252,7 +252,8 @@ export default function InsightPanel({ isExportingImage = false, onCopySummary, 
           <span><b>Real data</b>{profile.sourceName}</span>
           <span><b>Estimated data</b>Modeled tiles are labeled Estimated</span>
           <span><b>Beta data</b>Similarity, sports, and AI shortcuts</span>
-          <span><b>Last updated</b>{new Date(profile.lastUpdated).toLocaleDateString()}</span>
+          <span><b>ACS 5-year period ending</b>{profile.sourceYear}</span>
+          <span><b>Profile retrieved</b><time dateTime={profile.lastUpdated}>{formatSourceDate(profile.lastUpdated)}</time></span>
         </div>
       </SidebarWidget>
       <div className="sidebar-action-grid">
