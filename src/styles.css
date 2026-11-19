@@ -7368,3 +7368,48 @@ body,
   body.scope-shell { padding: 0; }
   .scope-nav { display: none; }
 }
+
+/* A phone dashboard is one vertical reading column; desktop and export layouts keep their grids. */
+@media screen and (max-width: 599px) {
+  html:not(.full-image-exporting) #root .app-shell {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  html:not(.full-image-exporting) #root .app-shell > main {
+    min-width: 0;
+    padding: 12px;
+  }
+  html:not(.full-image-exporting) #root .app-shell :is(
+    .hero-band, .zip-console, .content-grid, .stat-grid, .chart-grid, .event-grid,
+    .source-card-grid, .home-value-hero, .real-estate-chart-grid, .ownership-intel-grid,
+    .tax-continuation-grid, .expanded-demographic-grid, .pulse-grid, .headline-grid,
+    .market-tile-grid, .premium-intel-grid, .sports-context-grid, .intel-ribbon,
+    .ai-signal-row, .ai-scan-columns, .comparison-grid, .anomaly-radar-grid,
+    .infographic-bottom-grid, .regional-comparison-grid, .regional-ladder,
+    .zip-intelligence-strip, .weather-forecast-strip, .filters
+  ) {
+    grid-template-columns: minmax(0, 1fr);
+    min-width: 0;
+    width: 100%;
+  }
+  html:not(.full-image-exporting) #root .app-shell :is(
+    .stat-card, .chart-card, .event-card, .source-card, .premium-intel-card,
+    .market-tile, .pulse-card, .headline-card, .ai-tool-card, .regional-comparison-card
+  ) {
+    min-width: 0;
+    max-width: 100%;
+    width: 100%;
+    overflow-wrap: anywhere;
+  }
+  #root .zip-console :is(input, button), #root .mobile-section-nav summary {
+    min-height: 48px;
+  }
+  #root .zip-console button { width: 100%; }
+  #root .weather-forecast-strip { overflow: visible; }
+  #root .weather-day { min-height: 44px; }
+  #root .expanded-demographic-grid { scroll-snap-type: none; }
+  #root :is(.tile-group-chips, .source-links, .intel-toolbar) {
+    flex-wrap: wrap;
+    overflow: visible;
+    min-width: 0;
+  }
+}
