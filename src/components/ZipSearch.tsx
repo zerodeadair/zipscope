@@ -8,9 +8,10 @@ type Props = {
   onSubmit: (zip: string) => void;
   isLoading: boolean;
   weatherPlace?: PlaceLookup | null;
+  compact?: boolean;
 };
 
-export default function ZipSearch({ initialZip, onSubmit, isLoading, weatherPlace = null }: Props) {
+export default function ZipSearch({ initialZip, onSubmit, isLoading, weatherPlace = null, compact = false }: Props) {
   const [zip, setZip] = useState(initialZip);
 
   function handleSubmit(event: FormEvent) {
@@ -24,7 +25,7 @@ export default function ZipSearch({ initialZip, onSubmit, isLoading, weatherPlac
         <div className="hero-title-row">
           <div className="brand-chip"><Radar size={16} /> ZipScope</div>
         </div>
-        <h1>ZIP Intelligence Console</h1>
+        <h1>{compact ? "Explore your ZIP" : "ZIP Intelligence Console"}</h1>
       </div>
       <div className="hero-intel-column">
         <HeaderWeatherTile zip={initialZip} place={weatherPlace} />

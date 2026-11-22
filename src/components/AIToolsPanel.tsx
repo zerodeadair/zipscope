@@ -1,4 +1,3 @@
-import MetricProvenance from "./MetricProvenance";
 import { BrainCircuit, ChevronRight, FileText, GitCompareArrows, Lightbulb, LineChart, ListChecks, Radar, ScanSearch, ShieldCheck, Sparkles, Workflow } from "lucide-react";
 import { useMemo, useState } from "react";
 import type { OddsQuote } from "../providers/oddsProvider";
@@ -45,10 +44,11 @@ export default function AIToolsPanel({
           <span className="mono-label"><BrainCircuit size={15} /> AI Tools / {profile ? "Sourced Intelligence" : "Demo Intelligence"}</span>
           <h2>Predictive command layer</h2>
           <p>{model.summary}</p>
+          <p className="source-note">Scores, confidence levels, comparison peers and forecasts are calculated or illustrative scenarios, not statistical confidence or official forecasts. Sports events and odds are demo samples, not live feeds.</p>
         </div>
         <div className="ai-confidence-card">
         <span>Confidence</span>
-          <strong>{model.confidence}%<MetricProvenance /></strong>
+          <strong>{model.confidence}%</strong>
           <small>{model.confidenceLabel} confidence from available {profile ? "public sources" : "public/demo sources"}</small>
           <div><i style={{ width: `${model.confidence}%` }} /></div>
         </div>
@@ -59,9 +59,9 @@ export default function AIToolsPanel({
           <div className="ai-card-title"><Sparkles size={17} /> AI Insight Summary</div>
           <p>{model.summary}</p>
           <div className="ai-signal-row">
-            <span>{profile ? "Market Score" : "Screen Score"} <b>{activeScore}<MetricProvenance /></b></span>
-            <span>Events <b>{events.length}<MetricProvenance>Beta</MetricProvenance></b></span>
-            <span>Odds <b>{odds.length}<MetricProvenance>Beta</MetricProvenance></b></span>
+            <span>{profile ? "Market Score" : "Screen Score"} <b>{activeScore}</b></span>
+            <span>Events <b>{events.length}</b></span>
+            <span>Odds <b>{odds.length}</b></span>
           </div>
         </article>
 
@@ -88,21 +88,20 @@ export default function AIToolsPanel({
             </select>
           </label>
           <div className="comparison-grid">
-            <ComparisonMetric label={profile ? "Population" : "Event Coverage"} left={profile ? formatNumber(profile.population) : `${events.length} Beta events`} right={profile ? formatNumber(peer.population) + " Modeled" : "Benchmark slate"} />
-            <ComparisonMetric label={profile ? "Median Income" : "Odds Coverage"} left={profile?.medianHouseholdIncome === null ? "Unavailable" : profile ? formatCurrency(profile.medianHouseholdIncome) : `${odds.length} Beta quotes`} right={profile ? formatCurrency(peer.income) + " Modeled" : "Peer provider set"} />
-            <ComparisonMetric label={profile ? "Market Score" : "Screen Score"} left={`${activeScore} Modeled`} right={`${peer.marketScore} Modeled`} />
-            <ComparisonMetric label="Sports Index" left={`${Math.min(98, events.length * 9 + 34)} Modeled`} right={`${peer.sportsIndex} Modeled`} />
+            <ComparisonMetric label={profile ? "Population" : "Event Coverage"} left={profile ? formatNumber(profile.population) : `${events.length} events`} right={profile ? formatNumber(peer.population) : "Benchmark slate"} />
+            <ComparisonMetric label={profile ? "Median Income" : "Odds Coverage"} left={profile?.medianHouseholdIncome === null ? "Unavailable" : profile ? formatCurrency(profile.medianHouseholdIncome) : `${odds.length} quotes`} right={profile ? formatCurrency(peer.income) : "Peer provider set"} />
+            <ComparisonMetric label={profile ? "Market Score" : "Screen Score"} left={`${activeScore}`} right={`${peer.marketScore}`} />
+            <ComparisonMetric label="Sports Index" left={`${Math.min(98, events.length * 9 + 34)}`} right={`${peer.sportsIndex}`} />
           </div>
         </article>
 
         <article className="ai-tool-card forecast-card">
           <div className="ai-card-title"><LineChart size={17} /> AI Prediction / Forecast</div>
-          <small>Demo estimates, not guarantees.</small>
           <div className="forecast-list">
             {model.forecast.map((item) => (
               <div className={`forecast-pill ${item.tone}`} key={item.label}>
                 <span>{item.label}</span>
-                <strong>{item.value}{/\d/.test(item.value) && <MetricProvenance>Estimated</MetricProvenance>}</strong>
+                <strong>{item.value}</strong>
               </div>
             ))}
           </div>
@@ -133,7 +132,7 @@ export default function AIToolsPanel({
             {model.anomalyRadar.map((item) => (
               <div className={`anomaly-radar-item ${item.tone}`} key={item.label}>
                 <span>{item.label}</span>
-                <strong>{item.value}{item.label === "Sports adapter density" && <MetricProvenance>Beta</MetricProvenance>}</strong>
+                <strong>{item.value}</strong>
                 <p>{item.detail}</p>
               </div>
             ))}
@@ -160,7 +159,7 @@ export default function AIToolsPanel({
               <label key={factor.label}>
                 {factor.label}
                 <span><i style={{ width: `${factor.score}%` }} /></span>
-                <b>{factor.score}%<MetricProvenance /></b>
+                <b>{factor.score}%</b>
               </label>
             ))}
           </div>
@@ -226,7 +225,7 @@ function buildCurrentScreenModel(zip: string, events: SportsEvent[], odds: OddsQ
     riskSignals: [
       "Official demographic profile is unavailable, so demographic inference is intentionally locked.",
       `${odds.length} odds quotes are demo-normalized and should be treated as product behavior samples, not betting advice.`,
-      "Forecast strength is limited until Census ACS and live provider keys are connected.",
+      "Forecast strength is limited by available Census fields and demo-only sports and odds adapters.",
     ],
     opportunitySignals: [
       `${events.length} upcoming events can still support interface testing, comparison workflows, and executive briefing behavior.`,
@@ -241,13 +240,13 @@ function buildCurrentScreenModel(zip: string, events: SportsEvent[], odds: OddsQ
     anomalyRadar: [
       { label: "Demographic lock", value: "Safe", detail: "No fake demographic facts are generated when Census is unavailable.", tone: "stable" as const },
       { label: "Sports surface", value: `${events.length}`, detail: "Events are available for interface testing and context display.", tone: events.length ? "stable" as const : "watch" as const },
-      { label: "Odds surface", value: `${odds.length}`, detail: "Odds are demo-normalized unless a live provider is configured.", tone: odds.length ? "watch" as const : "alert" as const },
+      { label: "Odds surface", value: `${odds.length}`, detail: "The current adapter supplies demo samples, not live odds.", tone: odds.length ? "watch" as const : "alert" as const },
       { label: "Provider status", value: "Beta", detail: "Adapters remain safe to run locally without paid APIs.", tone: "watch" as const },
     ],
     actionQueue: [
       { label: "Add Census key", detail: "Connect official ACS profile data for the requested ZIP/ZCTA." },
       { label: "Verify place label", detail: "Use Zippopotam.us and local seeds only for city/state/county labels." },
-      { label: "Connect sports provider", detail: "Add an event or odds key when ready; demo adapters keep the UI running until then." },
+      { label: "Connect sports provider", detail: "A live provider still needs to be connected and verified; adding a key alone does not change these demo samples." },
       { label: "Keep demo labels visible", detail: "Never present mock or modeled fields as official public data." },
     ],
     confidenceFactors: [

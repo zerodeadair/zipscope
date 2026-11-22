@@ -1,4 +1,3 @@
-import MetricProvenance from "./MetricProvenance";
 import type { OddsQuote } from "../providers/oddsProvider";
 import type { SportsEvent } from "../providers/sportsEventsProvider";
 import type { DemographicProfile } from "../types/demographics";
@@ -57,8 +56,8 @@ export default function PrintableZipReport({ events, odds, pinnedTileIds, profil
         </div>
         <div className="export-score-card">
           <span>Market signal</span>
-          <strong>{score}<MetricProvenance /></strong>
-          <p>{confidence.score}% source coverage</p>
+          <strong>{score}</strong>
+          <p>App-derived index · {confidence.score}% source coverage</p>
           <i><b style={{ width: `${confidence.score}%` }} /></i>
         </div>
       </header>
@@ -78,6 +77,7 @@ export default function PrintableZipReport({ events, odds, pinnedTileIds, profil
           <span className="export-kicker">Core snapshot</span>
           <h2>Demographic and housing facts</h2>
         </div>
+        <p>Source: {profile.sourceName}, ACS 5-year period ending {profile.sourceYear}. These survey estimates describe ZCTA {profile.zcta}.</p>
         <div className="export-kpi-grid">
           {facts.map(([label, value]) => (
             <div key={label}>
@@ -93,17 +93,17 @@ export default function PrintableZipReport({ events, odds, pinnedTileIds, profil
           <span className="export-kicker">Pinned intelligence</span>
           <h2>{pinnedTiles.length} report tiles</h2>
         </div>
+        <p>Survey facts retain their source status. Estimated fields and modeled indices are app-derived planning indicators; experimental tiles retain their Beta status below.</p>
         <div className="export-tile-grid">
           {pinnedTiles.map((tile) => (
             <article key={tile.id}>
               <div>
                 <span>{tile.category}</span>
-                {tile.status === "Real data" && <em>{tile.status}</em>}
               </div>
-              <strong>{tile.value}{tile.status && tile.status !== "Real data" && <MetricProvenance>{tile.status}</MetricProvenance>}</strong>
+              <strong>{tile.value}</strong>
               <h3>{tile.label}</h3>
               <p>{tile.detail}</p>
-              <small>{tile.confidence}</small>
+              <small>{tile.status ? `${tile.status} · ` : ""}{tile.confidence}</small>
             </article>
           ))}
         </div>
@@ -115,12 +115,14 @@ export default function PrintableZipReport({ events, odds, pinnedTileIds, profil
             <span className="export-kicker">Premium signals</span>
             <h2>Market context</h2>
           </div>
+          <p>App-derived indices combine profile values and planning assumptions; each indicator retains its calculation context.</p>
           <div className="export-signal-list">
             {signals.slice(0, 6).map((signal) => (
               <div key={signal.label}>
                 <span>{signal.label}</span>
-                <strong>{signal.value}<MetricProvenance /></strong>
+                <strong>{signal.value}</strong>
                 <i><b style={{ width: `${signal.score}%` }} /></i>
+                <small>{signal.detail}</small>
               </div>
             ))}
           </div>
@@ -148,12 +150,13 @@ export default function PrintableZipReport({ events, odds, pinnedTileIds, profil
           <span className="export-kicker">Similar Areas Beta</span>
           <h2>Comparable ZIP preview</h2>
         </div>
+        <p>Beta comparison uses a fixed candidate set and reference bands. Match percentages are app-derived similarity scores rather than a fresh Census lookup of each candidate.</p>
         <div className="export-similar-grid">
           {similarAreas.map((area) => (
             <article key={area.zip}>
               <div>
                 <strong>{area.zip}</strong>
-                <span>{area.matchScore}% match<MetricProvenance>Beta</MetricProvenance></span>
+                <span>{area.matchScore}% match</span>
               </div>
               <h3>{area.city}, {area.stateCode}</h3>
               <p>{area.similarities.join(" / ")}</p>
@@ -168,6 +171,7 @@ export default function PrintableZipReport({ events, odds, pinnedTileIds, profil
             <span className="export-kicker">Sports context</span>
             <h2>Nearby event signals</h2>
           </div>
+          <p>Illustrative events from the demo sports adapter; verify the official schedule for current events.</p>
           <div className="export-text-stack">
             {sportsItems.length ? sportsItems.map((event) => (
               <p key={event.id}>{event.awayTeam} at {event.homeTeam} / {event.league}</p>
@@ -179,10 +183,11 @@ export default function PrintableZipReport({ events, odds, pinnedTileIds, profil
             <span className="export-kicker">Odds snapshot</span>
             <h2>Market lines</h2>
           </div>
+          <p>Illustrative quotes from the demo odds adapter, with provider and snapshot dates retained below.</p>
           <div className="export-text-stack">
             {oddsItems.length ? oddsItems.map((quote) => (
               <p key={`${quote.eventId}-${quote.provider}-${quote.market}`}>
-                {quote.provider} / {quote.market} / {formatOddsQuote(quote)} (Beta)
+                {quote.provider} / {quote.market} / {formatOddsQuote(quote)} / snapshot <time dateTime={quote.lastUpdated}>{formatSourceDate(quote.lastUpdated)}</time>
               </p>
             )) : <p>Odds unavailable.</p>}
           </div>
@@ -191,7 +196,7 @@ export default function PrintableZipReport({ events, odds, pinnedTileIds, profil
 
       <footer className="print-report-footer export-report-footer">
         <span>{profile.sourceName}. ZIP approximated as Census ZCTA {profile.zcta}. Profile retrieved <time dateTime={profile.lastUpdated}>{formatSourceDate(profile.lastUpdated)}</time>.</span>
-        <span>Modeled, estimated, and beta values are for planning.</span>
+        <span>Source facts, app-derived indicators and demo context are distinguished in their report sections.</span>
       </footer>
     </section>
   );

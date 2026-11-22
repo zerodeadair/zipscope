@@ -1,4 +1,3 @@
-import MetricProvenance from "./MetricProvenance";
 import { forwardRef, useEffect, useMemo, useRef, useState } from "react";
 import { Baby, Banknote, BriefcaseBusiness, Building2, Car, ChevronDown, ChevronUp, Clock3, CloudSun, Gauge, GraduationCap, HeartPulse, Home, Info, Languages, Laptop, MapPinned, Navigation, Pin, Radar, Rocket, Scale, School, Search, ShieldAlert, Smartphone, Sparkles, Store, Timer, Train, Trophy, Umbrella, UserRound, Users, UsersRound, Vote, Wifi } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
@@ -20,6 +19,7 @@ export type DemographicTile = {
   confidence?: string;
   trend?: string;
   percentile?: number;
+  basis?: string;
 };
 
 const priorityGroups = ["All", "Pinned", "Overview", "Population", "Income", "Housing", "Cost of Living", "Jobs", "Education", "Lifestyle", "Transportation", "Technology", "Civic", "Risk", "Opportunity", "Sports", "Growth", "Beta"];
@@ -33,11 +33,12 @@ type Props = {
   onPinChange?: (pinnedIds: string[]) => void;
   pinnedTileIds?: string[];
   profile: DemographicProfile;
+  compact?: boolean;
 };
 
 export const recommendedTileIds = ["home-value", "owner-occupied", "population", "median-income", "home-income", "growth-opportunity", "investment-score", "cost-of-living", "commute"];
 
-export default function DemographicsDashboard({ onPinChange, pinnedTileIds: controlledPinnedTileIds, profile }: Props) {
+export default function DemographicsDashboard({ onPinChange, pinnedTileIds: controlledPinnedTileIds, profile, compact = false }: Props) {
   const tiles = useMemo(() => buildDemographicTiles(profile), [profile]);
   const [activeGroup, setActiveGroup] = useState(() => localStorage.getItem(additionalGroupStorageKey) ?? "All");
   const [tileQuery, setTileQuery] = useState(() => localStorage.getItem(additionalQueryStorageKey) ?? "");
@@ -46,8 +47,12 @@ export default function DemographicsDashboard({ onPinChange, pinnedTileIds: cont
   const [localPinnedTileIds, setLocalPinnedTileIds] = useState<string[]>(["home-value", "owner-occupied", "population", "median-income", "home-income"]);
   const pinnedTileIds = controlledPinnedTileIds ?? localPinnedTileIds;
   const rankedTiles = useMemo(() => rankDemographicTiles(tiles, pinnedTileIds), [pinnedTileIds, tiles]);
-  const topTiles = rankedTiles.slice(0, topDefaultTileLimit);
-  const additionalTiles = rankedTiles.slice(topDefaultTileLimit);
+  const visibleTileLimit = compact ? 8 : topDefaultTileLimit;
+  const topTiles = compact
+    ? recommendedTileIds.slice(0, visibleTileLimit).flatMap((id) => rankedTiles.filter((tile) => tile.id === id))
+    : rankedTiles.slice(0, visibleTileLimit);
+  const topTileIds = new Set(topTiles.map((tile) => tile.id));
+  const additionalTiles = rankedTiles.filter((tile) => !topTileIds.has(tile.id));
   const intelligenceQuestions = useMemo(() => buildTopIntelligenceQuestions(profile, rankedTiles), [profile, rankedTiles]);
   const regionalScope = useMemo(() => buildRegionalScope(profile), [profile]);
   const [selectedTileId, setSelectedTileId] = useState(rankedTiles[0]?.id ?? "");
@@ -139,15 +144,16 @@ export default function DemographicsDashboard({ onPinChange, pinnedTileIds: cont
           <small>Profile retrieved <time dateTime={profile.lastUpdated}>{formatSourceDate(profile.lastUpdated)}</time></small>
         </div>
       </div>
+      <p className="provenance-note demographic-data-note">Population, income, housing and other Census figures are ACS survey estimates. Planning scores and synthetic indicators are calculated; open any card for its basis and explanation.</p>
       <IntelligenceQuestionStrip questions={intelligenceQuestions} />
-      <RegionalScopePanel profile={profile} scope={regionalScope} />
+      {compact ? <details className="modern-regional-details"><summary>Explore regional comparisons</summary><RegionalScopePanel profile={profile} scope={regionalScope} /></details> : <RegionalScopePanel profile={profile} scope={regionalScope} />}
       {selectedTile && <TileInsightPanel ref={insightRef} tile={selectedTile} profile={profile} />}
       <div className="priority-dashboard-heading">
         <div>
-          <span className="mono-label">Top Default Dashboard</span>
-          <h3>20 highest-value ZIP intelligence cards</h3>
+          <span className="mono-label">{compact ? "At a glance" : "Top Default Dashboard"}</span>
+          <h3>{visibleTileLimit} {compact ? "essential" : "highest-value"} ZIP intelligence cards</h3>
         </div>
-        <p>Ranked by housing relevance, everyday readability, investment usefulness, comparison value, source confidence, and visual signal strength.</p>
+        <p>{compact ? "The essentials for understanding this ZIP. Open additional analytics below for every metric, category filter and pinned card." : "Ranked by housing relevance, everyday readability, investment usefulness, comparison value, source confidence, and visual signal strength."}</p>
       </div>
       <div className={`stat-grid expanded-demographic-grid${compactView ? " compact" : ""}`}>
         {topTiles.map((tile) => (
@@ -160,6 +166,7 @@ export default function DemographicsDashboard({ onPinChange, pinnedTileIds: cont
             category={tile.category}
             confidence={tile.confidence}
             status={tile.status}
+            basis={tile.basis}
             trend={tile.trend}
             percentile={tile.percentile}
             pinned={pinnedTileIds.includes(tile.id)}
@@ -214,6 +221,7 @@ export default function DemographicsDashboard({ onPinChange, pinnedTileIds: cont
                   category={tile.category}
                   confidence={tile.confidence}
                   status={tile.status}
+                  basis={tile.basis}
                   trend={tile.trend}
                   percentile={tile.percentile}
                   pinned={pinnedTileIds.includes(tile.id)}
@@ -244,7 +252,8 @@ const TileInsightPanel = forwardRef<HTMLElement, { tile: DemographicTile; profil
           <h3>{tile.insightTitle}</h3>
         </div>
       </div>
-      <div className="tile-insight-selected">Selected tile: {tile.label} / {tile.value}{tile.status && tile.status !== "Real data" && <MetricProvenance>{tile.status}</MetricProvenance>}</div>
+      <div className="tile-insight-selected">Selected tile: {tile.label} / {tile.value}</div>
+      <p className="provenance-note">{tile.basis}</p>
       <p>{tile.insight}</p>
       <small>
         Read as ZIP {profile.zip} / Census ZCTA {profile.zcta}. Demographic estimates describe local context; modeled values are signals, not official determinations.
@@ -284,7 +293,7 @@ function IntelligenceQuestionStrip({ questions }: { questions: IntelligenceQuest
               <Icon size={18} />
               <span>{question.question}</span>
             </div>
-            <strong>{question.answer}<MetricProvenance /></strong>
+            <strong>{question.answer}</strong>
             <p>{question.detail}</p>
             <div className="zip-question-meter" aria-label={`${question.answer} score ${question.score}`}>
               <i style={{ width: `${question.score}%` }} />
@@ -304,7 +313,7 @@ function RegionalScopePanel({ profile, scope }: { profile: DemographicProfile; s
           <span className="mono-label">Regional Scope</span>
           <h3>ZIP to city to county to state</h3>
         </div>
-        <p>{scope[0]?.shareLabel} Scope rows beyond ZIP are modeled comparison benchmarks until direct city, county, and state feeds are connected.</p>
+        <p className="provenance-note">ZIP population, home value and income use Census ACS {profile.sourceYear}. City, county and state values are illustrative benchmarks, not official regional statistics. Cost and growth are calculated scores.</p>
       </div>
       <div className="regional-ladder" aria-label="Geographic hierarchy">
         {scope.map((row, index) => (
@@ -320,12 +329,13 @@ function RegionalScopePanel({ profile, scope }: { profile: DemographicProfile; s
           <article className="regional-comparison-card" key={row.level}>
             <span>{row.level}</span>
             <strong>{row.label}</strong>
+            <small className="regional-basis">{row.level === "ZIP" ? `Census ACS ${profile.sourceYear} + calculated scores` : "Illustrative benchmark"}</small>
             <dl>
-              <div><dt>Population</dt><dd>{formatNumber(row.population)}{row.level !== "ZIP" && <MetricProvenance />}</dd></div>
-              <div><dt>Home Value</dt><dd>{formatOptionalCurrency(row.homeValue)}{row.level !== "ZIP" && row.homeValue !== null && <MetricProvenance />}</dd></div>
-              <div><dt>Income</dt><dd>{formatOptionalCurrency(row.income)}{row.level !== "ZIP" && row.income !== null && <MetricProvenance />}</dd></div>
-              <div><dt>Cost</dt><dd>{row.costOfLiving}/100<MetricProvenance /></dd></div>
-              <div><dt>Growth</dt><dd>{row.growth}/100<MetricProvenance /></dd></div>
+              <div><dt>Population</dt><dd>{formatNumber(row.population)}</dd></div>
+              <div><dt>Home Value</dt><dd>{formatOptionalCurrency(row.homeValue)}</dd></div>
+              <div><dt>Income</dt><dd>{formatOptionalCurrency(row.income)}</dd></div>
+              <div><dt>Cost</dt><dd>{row.costOfLiving}/100</dd></div>
+              <div><dt>Growth</dt><dd>{row.growth}/100</dd></div>
             </dl>
             <p>{row.shareLabel}</p>
           </article>
@@ -1738,6 +1748,9 @@ function enrichTile(tile: DemographicTile): DemographicTile {
   };
   const sourcedIds = new Set(["population", "median-age", "female", "male", "median-income", "poverty-rate", "high-school", "bachelors", "housing-units", "home-value", "owner-occupied", "vacancy", "commute", "source-year", "top-group"]);
   const betaIds = new Set(["similar-match", "weather-risk", "weather-comfort", "tourism-traffic", "migration-trend", "job-sectors"]);
+  const calculatedIds = new Set(["home-income", "occupied-units", "renter-occupied"]);
+  const unavailable = /^(?:-|—|unavailable|not available|pending|coming soon)$/i.test(tile.value.trim());
+  const basis = unavailable ? "Data unavailable for this profile" : tile.id === "source-year" ? "Census ACS release metadata" : sourcedIds.has(tile.id) ? "Census ACS survey estimate" : calculatedIds.has(tile.id) ? "Calculated from Census ACS estimates" : betaIds.has(tile.id) ? "Experimental planning indicator; not an official statistic" : "Modeled planning indicator; see the method below";
   const percentile = parsePercentile(tile.value);
 
   const category = normalizeTileCategory(tile.id, tile.category ?? categoryById[tile.id] ?? "Beta");
@@ -1745,10 +1758,11 @@ function enrichTile(tile: DemographicTile): DemographicTile {
   return {
     ...tile,
     category,
-    status: sourcedIds.has(tile.id) ? "Real data" : betaIds.has(tile.id) ? "Beta" : "Estimated",
-    confidence: sourcedIds.has(tile.id) ? "High confidence" : betaIds.has(tile.id) ? "Preview" : "Modeled",
-    trend: percentile >= 72 ? "Opportunity" : percentile <= 34 ? "Watch" : "Balanced",
-    percentile,
+    basis,
+    status: unavailable ? undefined : sourcedIds.has(tile.id) ? "Real data" : betaIds.has(tile.id) ? "Beta" : "Estimated",
+    confidence: basis,
+    trend: unavailable ? undefined : percentile >= 72 ? "Opportunity" : percentile <= 34 ? "Watch" : "Balanced",
+    percentile: unavailable ? undefined : percentile,
   };
 }
 

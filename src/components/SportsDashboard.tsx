@@ -1,4 +1,3 @@
-import MetricProvenance from "./MetricProvenance";
 import { CalendarDays, Filter, MapPin } from "lucide-react";
 import { useMemo, useState } from "react";
 import { OddsMarket, OddsQuote } from "../providers/oddsProvider";
@@ -32,7 +31,8 @@ export default function SportsDashboard({ events, odds }: { events: SportsEvent[
     <section className="dashboard-section">
       <div className="section-heading">
         <span>Secondary Sports Intelligence</span>
-        <h2>Upcoming events and public odds</h2>
+        <h2>Demo schedule and odds</h2>
+        <p className="source-note">The current sports and odds adapters supply demonstration samples, not live fixtures or betting markets. Load times do not confirm current prices; implied percentages are calculations from sample odds, not win forecasts.</p>
       </div>
       <div className="filters">
         <label><Filter size={15} /> League<select value={league} onChange={(event) => setLeague(event.target.value)}>{leagues.map((item) => <option key={item}>{item}</option>)}</select></label>
@@ -43,16 +43,16 @@ export default function SportsDashboard({ events, odds }: { events: SportsEvent[
       <div className="event-grid">
         {filteredEvents.map((event) => (
           <article className="event-card" key={event.id}>
-            <span>{event.league} | {event.eventType}<MetricProvenance>Beta</MetricProvenance></span>
+            <span>{event.league} | {event.eventType}</span>
             <h3>{event.awayTeam} at {event.homeTeam}</h3>
-            <p><CalendarDays size={15} /> {new Date(event.startsAt).toLocaleString()}<MetricProvenance>Beta</MetricProvenance></p>
+            <p><CalendarDays size={15} /> {new Date(event.startsAt).toLocaleString()}</p>
             <p><MapPin size={15} /> {event.venue}, {event.location}</p>
           </article>
         ))}
       </div>
       <SportsContextPanel events={filteredEvents} odds={filteredOdds} />
-      <OddsTable events={filteredEvents} odds={filteredOdds} />
-      <div className="responsible-note">Public odds are shown for informational analysis only. ZipScope does not provide betting advice.</div>
+      <OddsTable events={filteredEvents} odds={filteredOdds} showDemoNote={false} />
+      <div className="responsible-note">Demo odds are shown for informational analysis only. ZipScope does not provide betting advice.</div>
     </section>
   );
 }

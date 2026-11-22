@@ -1,0 +1,128 @@
+/* Shared source context stays readable without repeating warning badges on every value. */
+#root .provenance-note,
+#root .weather-source-note,
+.print-report .provenance-note {
+  margin: 6px 0 10px;
+  color: #536c7b !important;
+  font-size: .82rem;
+  font-weight: 400 !important;
+  line-height: 1.55;
+  letter-spacing: normal;
+  text-transform: none;
+}
+#root .dark-theme :is(.provenance-note, .weather-source-note) { color: #bfd0da !important; }
+.regional-basis { display: block; margin: 6px 0 12px; font-size: .75rem; }
+.demographic-summary-main { min-width: 0; flex: 1; }
+.demographic-summary-main .source-links { width: 100%; }
+#root [id] { scroll-margin-top: calc(84px + var(--scope-nav-top, 0px)); }
+.score-ring { align-content: center; gap: 8px; }
+.score-ring span { margin: 0; max-width: 100%; text-align: center; }
+.insight-source-note { padding: 0 4px; }
+
+.zip-view-bar {
+  position: sticky;
+  top: var(--scope-nav-top, 0px);
+  z-index: 45;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  padding: 8px 0;
+  margin: -8px 0 12px;
+  background: #f5f9fb;
+  border-bottom: 1px solid #d7e2e6;
+}
+.zip-view-bar > span { font-weight: 650; }
+.zip-view-bar small { display: inline-block; margin-left: 12px; font-size: .8rem; font-weight: 400; }
+.zip-view-toggle { display: flex; padding: 3px; border: 1px solid #d9e1da; border-radius: 14px; background: #f4f4ed; }
+#root .zip-view-toggle button {
+  min-height: 44px;
+  min-width: 92px;
+  padding: 8px 16px;
+  color: #21483c !important;
+  background: transparent !important;
+  border: 0;
+  border-radius: 11px;
+  cursor: pointer;
+  box-shadow: none !important;
+}
+#root .zip-view-toggle button[aria-pressed="true"] { background: #183f32 !important; color: white !important; }
+.zip-view-toggle button:focus-visible { outline: 3px solid #478973; outline-offset: 3px; }
+.dark-theme .zip-view-bar { background: #152834; border-color: #45606e; }
+.dark-theme .zip-view-toggle { background: #dce6df; }
+
+/* Modern changes the reading order and density; Classic keeps the full dashboard. */
+#root .zip-view-modern { grid-template-columns: minmax(0, 1fr); background: #f5f6f2; }
+.zip-view-modern > .sidebar { display: none; }
+#root .zip-view-modern > main { width: min(1440px, 100%); min-width: 0; padding: 22px 28px 60px; }
+.zip-view-modern .zip-view-bar { background: #f5f6f2; }
+.zip-view-modern .topbar { justify-content: flex-end; margin: 0 0 12px; }
+.zip-view-modern .topbar > :is(strong, span), .zip-view-modern .topbar::after { display: none; }
+#root .zip-view-modern .hero-band { min-height: 0; padding: 24px; background: #fff; border: 1px solid #dce4de; box-shadow: none; }
+.zip-view-modern .hero-band::before, .zip-view-modern .hero-band::after { display: none; }
+#root .zip-view-modern .hero-copy h1 { font-size: clamp(1.8rem, 3vw, 2.7rem); letter-spacing: -.035em; line-height: 1.1; }
+.zip-view-modern .hero-intel-column > .zip-console { order: -1; }
+.zip-view-modern .header-weather-tile { background: #f8faf8; box-shadow: none; backdrop-filter: none; }
+.zip-view-modern .mobile-section-nav { display: block; margin: 14px 0; }
+.zip-view-modern .mobile-section-nav summary { cursor: pointer; min-height: 44px; padding: 12px; }
+.zip-view-modern .mobile-section-nav nav { display: flex; flex-wrap: wrap; gap: 8px 16px; padding: 0 12px 12px; }
+.zip-view-modern .mobile-section-nav nav :is(a, button) { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; }
+.zip-view-modern .content-grid { grid-template-columns: minmax(0, 1fr) 300px; gap: 24px; }
+.zip-view-modern .primary-column { gap: 32px; }
+.zip-view-modern .expanded-demographic-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.zip-view-modern .zip-intelligence-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.zip-view-modern .zip-question-card:last-child { grid-column: 1 / -1; }
+#root .zip-view-modern :is(.stat-card, .map-panel, .zip-question-card, .insight-panel, .sidebar-widget, .tile-insight-panel, .future-intel-header) {
+  background: #fff !important;
+  border-color: #dce4de !important;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+.zip-view-modern .stat-card { min-height: 170px; }
+.zip-view-modern .stat-card::before, .zip-view-modern .stat-card::after { display: none; }
+.zip-view-modern .modern-regional-details { border-block: 1px solid #dce4de; padding: 10px 0; }
+.modern-regional-details > summary { min-height: 44px; padding: 12px 0; cursor: pointer; font-weight: 600; }
+.modern-regional-details[open] > summary { margin-bottom: 12px; }
+.zip-view-modern .insight-panel { top: calc(84px + var(--scope-nav-top, 0px)); max-height: calc(100vh - 100px - var(--scope-nav-top, 0px)); }
+.zip-view-modern .score-ring { width: auto; height: auto; padding: 12px; margin: 0; border: 0; border-radius: 0; background: transparent; box-shadow: none; justify-items: start; }
+.zip-view-modern .score-ring .orb-core { display: none; }
+.zip-view-modern .score-ring strong { font-size: 3.6rem; line-height: 1; }
+.zip-view-modern .score-ring span { font-size: .8rem; }
+#root .zip-view-modern.dark-theme { background: #11222a; }
+.zip-view-modern.dark-theme .zip-view-bar { background: #11222a; }
+#root .zip-view-modern.dark-theme :is(.hero-band, .header-weather-tile, .stat-card, .map-panel, .zip-question-card, .insight-panel, .sidebar-widget, .tile-insight-panel, .future-intel-header) { background: #18303b !important; border-color: #3d5763 !important; }
+#root .zip-view-modern.dark-theme :is(.hero-band, .stat-card, .map-panel, .zip-question-card, .insight-panel, .tile-insight-panel) :is(h1, h2, h3, strong, b, time, input),
+#root .zip-view-modern.dark-theme :is(.demographic-heading h2, .priority-dashboard-heading h3, .mobile-section-nav summary, .modern-regional-details > summary) { color: #e4f0f3 !important; }
+#root .zip-view-modern.dark-theme :is(.hero-band, .stat-card, .map-panel, .zip-question-card, .insight-panel, .tile-insight-panel, .zip-view-bar) :is(p, span, small, dd, dt) { color: #bfced7 !important; }
+#root .zip-view-modern.dark-theme .insight-panel :is(.future-widget-score, .future-widget-metrics div, .summary-stack div, .quality-ledger span, .xai-panel, .correlation-panel, .alert-panel) { background: #1c3946; border-color: #3d5763; }
+
+@media (max-width: 1000px) {
+  .zip-view-modern .content-grid { grid-template-columns: minmax(0, 1fr); }
+  .zip-view-modern .insight-panel { position: static; max-height: none; overflow: visible; }
+}
+@media (max-width: 760px) {
+  /* Clip overflow without making an ancestor into a separate scroll container. */
+  html, body, #root .app-shell, #root .app-shell > main { overflow: clip; }
+}
+@media (max-width: 599px) {
+  .zip-view-bar { margin: -4px 0 10px; padding: 6px 0; flex-wrap: nowrap; }
+  .zip-view-bar small { display: none; }
+  #root .zip-view-toggle button { min-width: 84px; padding: 8px 12px; }
+  #root .zip-view-modern > main { padding: 12px 12px 140px; }
+  #root .zip-view-modern .hero-band { padding: 16px; }
+  #root .zip-view-modern .hero-copy h1 { font-size: 1.7rem !important; }
+  #root .zip-view-modern :is(.expanded-demographic-grid, .zip-intelligence-strip) { grid-template-columns: minmax(0, 1fr); }
+  html:not(.full-image-exporting) #root .zip-view-modern .weather-forecast-strip { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .zip-view-modern .weather-day { padding: 6px; font-size: .7rem; }
+  .zip-view-modern .weather-day svg { width: 18px; }
+  .zip-view-modern .tile-insight-panel { position: static; }
+  .zip-view-modern .tile-insight-panel p { display: block; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .orb-core { animation: none; }
+}
+@media print {
+  .zip-view-bar { display: none; }
+  .print-report .provenance-note { color: #444 !important; }
+}

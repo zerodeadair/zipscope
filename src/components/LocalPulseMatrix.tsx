@@ -1,4 +1,3 @@
-import MetricProvenance from "./MetricProvenance";
 import { Gauge, RadioTower, ShieldCheck } from "lucide-react";
 import { useMemo, useState } from "react";
 import type { DemographicProfile } from "../types/demographics";
@@ -9,7 +8,6 @@ type Horizon = "now" | "2030" | "2040";
 type PulseCard = {
   label: string;
   value: string;
-  modeled?: boolean;
   detail: string;
   tone: "cyan" | "violet" | "mint" | "blue";
 };
@@ -27,7 +25,7 @@ export default function LocalPulseMatrix({ profile }: { profile: DemographicProf
         <div>
           <span className="beta-chip">Beta intelligence layer</span>
           <h2>{profile.displayName} local pulse matrix</h2>
-          <p>Scenario signals are derived from sourced Census fields plus transparent client-side modeling. They are directional, not official forecasts.</p>
+          <p>The “now” population is the sourced ACS baseline; future populations and the access score are calculated scenarios, with fallback assumptions for missing inputs. They are not official forecasts.</p>
         </div>
         <div className="pulse-horizons" aria-label="Scenario horizon">
           {horizons.map((item) => (
@@ -48,7 +46,7 @@ export default function LocalPulseMatrix({ profile }: { profile: DemographicProf
         {matrix.cards.map((card) => (
           <article className={`pulse-card ${card.tone}`} key={card.label}>
             <span>{card.label}</span>
-            <strong>{card.value}{card.modeled && <MetricProvenance />}</strong>
+            <strong>{card.value}</strong>
             <p>{card.detail}</p>
           </article>
         ))}
@@ -57,7 +55,7 @@ export default function LocalPulseMatrix({ profile }: { profile: DemographicProf
       <div className="pulse-footer">
         <div>
           <Gauge size={16} />
-          <span>Data confidence: sourced demographics, modeled scenario overlay</span>
+          <span>Selected scenario horizon: {horizon}</span>
         </div>
         <div>
           <ShieldCheck size={16} />
@@ -84,8 +82,7 @@ function buildPulseMatrix(profile: DemographicProfile, horizon: Horizon) {
     {
       label: "Population trajectory",
       value: formatNumber(population),
-      modeled: horizon !== "now",
-      detail: horizon === "now" ? "Current ACS population baseline." : `${horizon} scenario band using a conservative local-growth multiplier.`,
+      detail: horizon === "now" ? "Current ACS population baseline." : `${horizon} scenario applies a fixed ${Math.round((multiplier - 1) * 100)}% change to the ACS population baseline.`,
       tone: "cyan",
     },
     {
@@ -103,7 +100,6 @@ function buildPulseMatrix(profile: DemographicProfile, horizon: Horizon) {
     {
       label: "Access friction",
       value: `${accessScore}/100`,
-      modeled: true,
       detail: "Composite of commute, vacancy, and poverty stress markers for planning context.",
       tone: accessScore > 58 ? "violet" : "cyan",
     },

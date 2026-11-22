@@ -7239,20 +7239,19 @@ body,
   display: inline-flex;
   width: fit-content;
   margin-inline-start: 0.42em;
-  padding: 0.12em 0.42em;
-  border: 1px solid #ad8b49;
-  border-radius: 4px;
-  color: #62420f !important;
-  background: #fff2d4;
-  font: 700 0.68rem/1.25 system-ui, sans-serif !important;
+  padding: 0;
+  border: 0;
+  color: #667990 !important;
+  background: transparent;
+  font: 400 0.75rem/1.5 system-ui, sans-serif !important;
   letter-spacing: normal !important;
   text-transform: none;
   vertical-align: middle;
 }
 
 #root .dark-theme .metric-provenance {
-  color: #ffe7b0 !important;
-  background: #46371e;
+  color: #bdcdd5 !important;
+  background: transparent;
 }
 
 #root .weather-day .metric-provenance {

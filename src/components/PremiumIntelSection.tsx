@@ -1,4 +1,3 @@
-import MetricProvenance from "./MetricProvenance";
 import { BriefcaseBusiness, CarFront, ChartNoAxesCombined, HeartHandshake, Home, Scale } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import type { DemographicProfile } from "../types/demographics";
@@ -23,7 +22,7 @@ export default function PremiumIntelSection({ profile }: { profile: DemographicP
           <span>Expanded Intelligence</span>
           <h2>Decision-grade ZIP signals</h2>
         </div>
-        <p>Concise modeled overlays built from the current sourced profile. Each score is a planning signal, not an official Census field.</p>
+        <p>Calculated planning signals from the sourced profile, with fallback assumptions for missing inputs. Scores are not official Census fields or forecasts.</p>
       </div>
       <div className="premium-intel-grid">
         {signals.map((signal) => {
@@ -34,7 +33,7 @@ export default function PremiumIntelSection({ profile }: { profile: DemographicP
                 <Icon size={18} />
                 <span>{signal.label}</span>
               </div>
-              <strong>{signal.value}<MetricProvenance /></strong>
+              <strong>{signal.value}</strong>
               <p>{signal.detail}</p>
               <div className="premium-intel-meter">
                 <i style={{ width: `${Math.max(6, Math.min(100, signal.score))}%` }} />

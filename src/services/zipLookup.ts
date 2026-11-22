@@ -54,7 +54,7 @@ export async function lookupZipPlace(zip: string): Promise<PlaceLookup | null> {
 
   const seed = placeSeeds[zip];
   try {
-    const response = await fetch(`https://api.zippopotam.us/us/${zip}`);
+    const response = await fetch(`https://api.zippopotam.us/us/${zip}`, { signal: AbortSignal.timeout(6000) });
     if (!response.ok) {
       return seed ? { ...seed, source: "local place seed" } : null;
     }

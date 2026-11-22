@@ -14,6 +14,7 @@ export type WeatherSnapshot = {
   placeLabel: string;
   temperature: number;
   temperatureModeled: boolean;
+  temperatureBasis: "provider-current" | "daily-summary" | "illustrative";
   condition: string;
   code: number;
   lastRefreshed: string;
@@ -35,7 +36,7 @@ type OpenMeteoResponse = {
 };
 
 export async function getWeatherForZip(zip: string, place: PlaceLookup | null): Promise<WeatherSnapshot> {
-  if (!place?.latitude || !place.longitude) {
+  if (typeof place?.latitude !== "number" || typeof place.longitude !== "number" || !Number.isFinite(place.latitude) || !Number.isFinite(place.longitude)) {
     return buildDemoWeather(zip, place, "Demo weather fallback");
   }
 
@@ -49,22 +50,26 @@ export async function getWeatherForZip(zip: string, place: PlaceLookup | null): 
       forecast_days: "5",
       timezone: "auto",
     });
-    const response = await fetch(`https://api.open-meteo.com/v1/forecast?${params.toString()}`);
+    const response = await fetch(`https://api.open-meteo.com/v1/forecast?${params.toString()}`, { signal: AbortSignal.timeout(8000) });
     if (!response.ok) {
       return buildDemoWeather(zip, place, "Demo weather fallback");
     }
     const payload = (await response.json()) as OpenMeteoResponse;
-    const currentCode = payload.current?.weather_code ?? payload.daily?.weather_code?.[0] ?? 0;
-    const high = payload.daily?.temperature_2m_max?.[0];
-    const low = payload.daily?.temperature_2m_min?.[0];
-    const temperature = payload.current?.temperature_2m ?? averageTemp(high, low);
+    const currentCode = validNumber(payload.current?.weather_code) ?? validNumber(payload.daily?.weather_code?.[0]) ?? -1;
+    const high = validNumber(payload.daily?.temperature_2m_max?.[0]);
+    const low = validNumber(payload.daily?.temperature_2m_min?.[0]);
+    const current = validNumber(payload.current?.temperature_2m);
+    const temperatureBasis = current !== undefined ? "provider-current" : high !== undefined || low !== undefined ? "daily-summary" : "illustrative";
+    const temperature = current ?? averageTemp(high, low);
     const forecast = buildForecast(payload);
+    if (temperatureBasis === "illustrative" && !forecast.length) return buildDemoWeather(zip, place, "Demo weather fallback");
 
     return {
       zip,
       placeLabel: placeLabel(zip, place),
       temperature: Math.round(temperature),
-      temperatureModeled: payload.current?.temperature_2m == null && high == null && low == null,
+      temperatureModeled: temperatureBasis === "illustrative",
+      temperatureBasis,
       condition: conditionFromCode(currentCode),
       code: currentCode,
       lastRefreshed: new Date().toISOString(),
@@ -77,20 +82,22 @@ export async function getWeatherForZip(zip: string, place: PlaceLookup | null): 
 }
 
 function buildForecast(payload: OpenMeteoResponse): WeatherDay[] {
-  const dates = payload.daily?.time ?? [];
+  const dates = Array.isArray(payload.daily?.time) ? payload.daily.time : [];
   const codes = payload.daily?.weather_code ?? [];
   const highs = payload.daily?.temperature_2m_max ?? [];
   const lows = payload.daily?.temperature_2m_min ?? [];
 
   return dates.slice(0, 5).map((date, index) => {
-    const code = codes[index] ?? 0;
+    const code = validNumber(codes[index]) ?? -1;
+    const high = validNumber(highs[index]);
+    const low = validNumber(lows[index]);
     return {
       date,
-      high: Math.round(highs[index] ?? 72),
-      low: Math.round(lows[index] ?? 54),
+      high: Math.round(high ?? 72),
+      low: Math.round(low ?? 54),
       condition: conditionFromCode(code),
       code,
-      modeled: highs[index] == null || lows[index] == null,
+      modeled: high === undefined || low === undefined,
     };
   });
 }
@@ -117,6 +124,7 @@ function buildDemoWeather(zip: string, place: PlaceLookup | null, source: Weathe
     placeLabel: placeLabel(zip, place),
     temperature: forecast[0].high - 4,
     temperatureModeled: true,
+    temperatureBasis: "illustrative",
     condition: forecast[0].condition,
     code: forecast[0].code,
     lastRefreshed: new Date().toISOString(),
@@ -140,6 +148,10 @@ function averageTemp(high?: number, low?: number) {
   if (typeof high === "number") return high;
   if (typeof low === "number") return low;
   return 72;
+}
+
+function validNumber(value: unknown) {
+  return typeof value === "number" && Number.isFinite(value) ? value : undefined;
 }
 
 export function conditionFromCode(code: number) {

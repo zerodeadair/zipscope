@@ -28,6 +28,10 @@ import { printElementReport } from "./utils/printReport";
 import { isValidZip } from "./utils/zipValidation";
 
 export default function App() {
+  const [view, setView] = useState<"modern" | "classic">(() => {
+    try { return localStorage.getItem("zipscope-view-v1") === "modern" ? "modern" : "classic"; }
+    catch { return "classic"; }
+  });
   const [zip, setZip] = useState("33558");
   const [profile, setProfile] = useState<DemographicProfile | null>(null);
   const [demographicError, setDemographicError] = useState<Extract<DemographicsResult, { ok: false }> | null>(null);
@@ -63,6 +67,10 @@ export default function App() {
   }, [isDark]);
 
   useEffect(() => {
+    try { localStorage.setItem("zipscope-view-v1", view); } catch { /* The view still works when storage is unavailable. */ }
+  }, [view]);
+
+  useEffect(() => {
     localStorage.setItem("zipscope-pinned-tiles", JSON.stringify(pinnedTileIds));
   }, [pinnedTileIds]);
 
@@ -70,6 +78,7 @@ export default function App() {
     if (
       !loading &&
       profile &&
+      view === "classic" &&
       !hasAutoFocusedDemographics &&
       !window.location.hash &&
       !window.matchMedia("(max-width: 599px)").matches
@@ -78,7 +87,7 @@ export default function App() {
       window.history.replaceState(null, "", "#demographics");
       requestAnimationFrame(() => document.getElementById("demographics")?.scrollIntoView({ block: "start" }));
     }
-  }, [hasAutoFocusedDemographics, loading, profile]);
+  }, [hasAutoFocusedDemographics, loading, profile, view]);
 
   async function runSearch(nextZip: string) {
     if (!isValidZip(nextZip)) {
@@ -196,12 +205,19 @@ export default function App() {
   );
 
   return (
-    <div className={`app-shell ${isDark ? "dark-theme" : "day-theme"}`}>
+    <div className={`app-shell zip-view-${view} ${isDark ? "dark-theme" : "day-theme"}`}>
       <aside className="sidebar">
         <div className="logo-orb"><Orbit size={24} /></div>
         {sectionNavigation}
       </aside>
       <main>
+        <div className="zip-view-bar">
+          <span>ZipScope <small>{view === "modern" ? "Focused overview" : "Full dashboard"}</small></span>
+          <div className="zip-view-toggle" role="group" aria-label="ZipScope view">
+            <button type="button" aria-pressed={view === "modern"} onClick={() => setView("modern")}>Modern</button>
+            <button type="button" aria-pressed={view === "classic"} onClick={() => setView("classic")}>Classic</button>
+          </div>
+        </div>
         <header className="topbar">
           <strong>ZipScope</strong>
           <span>Housing. Demographics. Regional intelligence. One ZIP at a time.</span>
@@ -212,6 +228,7 @@ export default function App() {
         </header>
         <div id="search">
           <ZipSearch
+            compact={view === "modern"}
             initialZip={zip}
             onSubmit={runSearch}
             isLoading={loading}
@@ -239,7 +256,7 @@ export default function App() {
         {!loading && profile && (
           <div className="content-grid">
             <div className="primary-column">
-              <div id="demographics" className="demographics-priority"><DemographicsDashboard profile={profile} pinnedTileIds={pinnedTileIds} onPinChange={updatePinnedTiles} /></div>
+              <div id="demographics" className="demographics-priority"><DemographicsDashboard profile={profile} pinnedTileIds={pinnedTileIds} onPinChange={updatePinnedTiles} compact={view === "modern"} /></div>
               <div id="real-estate"><RealEstateIntelligencePanel profile={profile} /></div>
               <AdvancedMarketTiles profile={profile} />
               <PremiumIntelSection profile={profile} />
@@ -257,6 +274,7 @@ export default function App() {
               <div id="notice" className="responsible-note wide">Public odds are shown for informational analysis only. ZipScope does not provide betting advice.</div>
             </div>
             <InsightPanel
+              compact={view === "modern"}
               profile={profile}
               onCopySummary={copyZipSummary}
               onExportImage={exportZipReportImage}

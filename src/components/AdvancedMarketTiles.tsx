@@ -1,4 +1,3 @@
-import MetricProvenance from "./MetricProvenance";
 import { Building2, Clock3, GraduationCap, Home, Landmark, LineChart, MapPinned, ShieldAlert, TrendingUp, WalletCards } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import type { DemographicProfile } from "../types/demographics";
@@ -22,6 +21,7 @@ export default function AdvancedMarketTiles({ profile }: { profile: DemographicP
         <span>Socio-Economic Intelligence</span>
         <h2>Market intelligence terminal</h2>
       </div>
+      <p className="source-note">Calculated planning indices from the sourced profile, with fallback assumptions for missing inputs. Reference levels are illustrative, not official Census measures, measured price indices or forecasts.</p>
       <div className="market-tile-grid">
         {tiles.map((tile) => {
           const Icon = tile.icon;
@@ -31,7 +31,7 @@ export default function AdvancedMarketTiles({ profile }: { profile: DemographicP
                 <Icon size={18} />
                 <span>{tile.label}</span>
               </div>
-              <strong>{tile.value}<MetricProvenance /></strong>
+              <strong>{tile.value}</strong>
               <p>{tile.detail}</p>
               <div className="market-meter">
                 <i style={{ width: `${Math.max(6, Math.min(tile.score, 100))}%` }} />
@@ -71,7 +71,7 @@ function buildMarketTiles(profile: DemographicProfile): MarketTile[] {
     {
       label: "Cost of Living Index",
       value: `${costIndex}`,
-      detail: `${costIndex >= 100 ? "Above" : "Below"} national baseline 100; weighted from housing, income, and poverty signals.`,
+      detail: `${costIndex >= 100 ? "Above" : "Below"} model reference 100; weighted from housing, income, and poverty inputs.`,
       score: costIndex,
       tone: costIndex > 112 ? "hot" : costIndex > 94 ? "warm" : "cool",
       icon: WalletCards,
